@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
 import OpenAI from 'openai';
 
 const router = Router();
@@ -13,9 +13,9 @@ interface ChatRequest {
   }>;
 }
 
-router.post('/chat', async (req: Request<{}, {}, ChatRequest>, res: Response) => {
+router.post('/chat', async (req, res) => {
   try {
-    const { messages } = req.body;
+    const { messages } = req.body as ChatRequest;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",

@@ -1,8 +1,8 @@
+import React, { useState } from "react";
 import { Header } from "@/components/Header";
 import { ChatPanel } from "@/components/ChatPanel";
 import { FileExplorer } from "@/components/FileExplorer";
 import { PreviewPanel } from "@/components/PreviewPanel";
-import { useState } from "react";
 
 const Index = () => {
   const [chatWidth, setChatWidth] = useState(300);
