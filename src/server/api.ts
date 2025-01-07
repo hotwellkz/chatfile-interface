@@ -1,11 +1,11 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, Router } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import OpenAI from 'openai';
 
 dotenv.config();
 
-const router = express.Router();
+const router: Router = express.Router();
 router.use(cors());
 router.use(express.json());
 
