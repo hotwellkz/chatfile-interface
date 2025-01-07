@@ -2,11 +2,12 @@ import express, { Request, Response, Router } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import OpenAI from 'openai';
+import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 
 dotenv.config();
 
 // Создаем экземпляр Router
-const router = express.Router();
+const router = Router();
 
 // Применяем middleware к роутеру
 router.use(cors());
@@ -19,10 +20,7 @@ const openai = new OpenAI({
 
 // Типизируем интерфейс для тела запроса
 interface ChatRequest {
-  messages: Array<{
-    role: string;
-    content: string;
-  }>;
+  messages: ChatCompletionMessageParam[];
 }
 
 // Определяем маршрут для чата с явной типизацией
@@ -35,7 +33,7 @@ router.post('/api/chat', async (req: Request<{}, any, ChatRequest>, res: Respons
     }
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-4o-mini",
       messages: messages,
       temperature: 0.6,
       max_tokens: 2000,
@@ -54,5 +52,4 @@ router.post('/api/chat', async (req: Request<{}, any, ChatRequest>, res: Respons
   }
 });
 
-// Экспортируем роутер
 export default router;
