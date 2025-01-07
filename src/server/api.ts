@@ -13,7 +13,7 @@ interface ChatRequest {
   }>;
 }
 
-router.post('/chat', async (req: Request<{}, any, ChatRequest>, res: Response) => {
+router.post('/chat', async (req: Request<{}, {}, ChatRequest>, res: Response) => {
   try {
     const { messages } = req.body;
 
