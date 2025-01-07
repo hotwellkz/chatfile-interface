@@ -1,5 +1,6 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { Configuration, OpenAIApi } from "https://esm.sh/openai@3.1.0"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { Configuration, OpenAIApi } from 'https://esm.sh/openai@3.2.1'
+import { serve } from "https://deno.fresh.dev/std@v9.6.1/http/server.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,59 +8,52 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const { messages } = await req.json()
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    )
 
-    // Validate request
-    if (!messages || !Array.isArray(messages)) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid request format' }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      )
+    const { data: { user }, error: authError } = await supabase.auth.getUser(
+      req.headers.get('Authorization')?.replace('Bearer ', '') ?? ''
+    )
+
+    if (authError || !user) {
+      throw new Error('Unauthorized')
     }
 
-    // Initialize OpenAI
+    const { messages } = await req.json()
+
     const configuration = new Configuration({
       apiKey: Deno.env.get('OPENAI_API_KEY'),
     })
     const openai = new OpenAIApi(configuration)
 
-    // Send request to OpenAI
     const completion = await openai.createChatCompletion({
-      model: "gpt-4",
+      model: "gpt-3.5-turbo",
       messages: messages,
-      temperature: 0.6,
-      max_tokens: 2000,
     })
 
-    const assistantMessage = {
-      role: "assistant",
-      content: completion.data.choices[0]?.message?.content || "Sorry, I couldn't generate a response",
-    }
+    const response = completion.data.choices[0].message
 
     return new Response(
-      JSON.stringify(assistantMessage),
-      { 
+      JSON.stringify(response),
+      {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
       },
     )
-
   } catch (error) {
-    console.error('Error:', error)
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
+      JSON.stringify({ error: error.message }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      },
     )
   }
 })
