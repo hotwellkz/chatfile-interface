@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import OpenAI from 'openai';
@@ -13,7 +13,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-router.post('/api/chat', async (req, res) => {
+router.post('/api/chat', async (req: Request, res: Response) => {
   try {
     const { messages } = req.body;
 
