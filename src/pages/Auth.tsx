@@ -21,9 +21,9 @@ const Auth = () => {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="w-full max-w-md p-6 space-y-4 bg-card rounded-lg shadow-lg">
-        <h1 className="text-2xl font-bold text-center text-foreground">Добро пожаловать</h1>
+    <div className="min-h-screen flex items-center justify-center bg-[#1A1F2C] p-4">
+      <div className="w-full max-w-md space-y-6 bg-[#221F26] p-8 rounded-lg shadow-xl border border-border/20">
+        <h1 className="text-3xl font-bold text-center text-white mb-8">Добро пожаловать</h1>
         <SupabaseAuth
           supabaseClient={supabase}
           appearance={{
@@ -31,14 +31,46 @@ const Auth = () => {
             variables: {
               default: {
                 colors: {
-                  brand: 'rgb(var(--primary))',
-                  brandAccent: 'rgb(var(--primary))',
+                  brand: '#9b87f5',
+                  brandAccent: '#7E69AB',
+                  brandButtonText: 'white',
+                  defaultButtonBackground: '#403E43',
+                  defaultButtonBackgroundHover: '#4a4950',
+                  inputBackground: '#2A2A2A',
+                  inputBorder: '#403E43',
+                  inputBorderHover: '#4a4950',
+                  inputBorderFocus: '#9b87f5',
                 }
               }
             },
             style: {
-              button: { background: 'rgb(var(--primary))', color: 'rgb(var(--primary-foreground))' },
-              anchor: { color: 'rgb(var(--primary))' },
+              button: { 
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '16px',
+                padding: '12px',
+                fontWeight: '500',
+              },
+              anchor: { 
+                color: '#9b87f5',
+                fontSize: '14px',
+              },
+              input: {
+                backgroundColor: '#2A2A2A',
+                color: 'white',
+                fontSize: '16px',
+                padding: '12px',
+                borderRadius: '8px',
+              },
+              label: {
+                color: '#E0E0E0',
+                fontSize: '14px',
+                marginBottom: '8px',
+              },
+              message: {
+                color: '#E0E0E0',
+                fontSize: '14px',
+              },
             }
           }}
           localization={{
