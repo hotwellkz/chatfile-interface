@@ -24,7 +24,7 @@ interface ChatRequest {
 }
 
 // Определяем маршрут для чата с явной типизацией
-router.post('/api/chat', async (req: Request<{}, any, ChatRequest>, res: Response) => {
+router.post('/api/chat', async (req: Request<{}, {}, ChatRequest>, res: Response) => {
   try {
     const { messages } = req.body;
 
