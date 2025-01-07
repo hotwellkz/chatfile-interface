@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { Configuration, OpenAIApi } from 'openai';
+import OpenAI from 'openai';
 
 dotenv.config();
 
@@ -9,11 +9,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const configuration = new Configuration({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
-const openai = new OpenAIApi(configuration);
 
 app.post('/api/chat', async (req, res) => {
   try {
@@ -23,7 +21,7 @@ app.post('/api/chat', async (req, res) => {
       return res.status(400).json({ error: 'Invalid request format' });
     }
 
-    const completion = await openai.createChatCompletion({
+    const completion = await openai.chat.completions.create({
       model: "gpt-4",
       messages: messages,
       temperature: 0.6,
@@ -32,7 +30,7 @@ app.post('/api/chat', async (req, res) => {
 
     const assistantMessage = {
       role: "assistant",
-      content: completion.data.choices[0]?.message?.content || "Извините, не удалось сгенерировать ответ",
+      content: completion.choices[0]?.message?.content || "Извините, не удалось сгенерировать ответ",
     };
 
     res.json(assistantMessage);
@@ -43,8 +41,4 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+export default app;
