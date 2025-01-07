@@ -1,6 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import apiApp from './api';
+import apiRouter from './api';
 
 dotenv.config();
 
@@ -8,7 +8,7 @@ const app = express();
 app.use(express.json());
 
 // Используем API роуты
-app.use('/', apiApp);
+app.use('/', apiRouter);
 
 const PORT = process.env.PORT || 3001;
 

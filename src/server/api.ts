@@ -5,15 +5,15 @@ import OpenAI from 'openai';
 
 dotenv.config();
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+const router = express.Router();
+router.use(cors());
+router.use(express.json());
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-app.post('/api/chat', async (req, res) => {
+router.post('/api/chat', async (req, res) => {
   try {
     const { messages } = req.body;
 
@@ -41,4 +41,4 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
-export default app;
+export default router;
