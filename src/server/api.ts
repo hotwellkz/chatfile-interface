@@ -1,13 +1,14 @@
-import express from 'express';
+import express, { Request, Response, Router } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import OpenAI from 'openai';
 
 dotenv.config();
 
+// Создаем экземпляр Router
 const router = express.Router();
 
-// Применяем middleware
+// Применяем middleware к роутеру
 router.use(cors());
 router.use(express.json());
 
@@ -16,8 +17,16 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Определяем маршрут для чата
-router.post('/api/chat', async (req, res) => {
+// Типизируем интерфейс для тела запроса
+interface ChatRequest {
+  messages: Array<{
+    role: string;
+    content: string;
+  }>;
+}
+
+// Определяем маршрут для чата с явной типизацией
+router.post('/api/chat', async (req: Request<{}, any, ChatRequest>, res: Response) => {
   try {
     const { messages } = req.body;
 
@@ -45,4 +54,5 @@ router.post('/api/chat', async (req, res) => {
   }
 });
 
+// Экспортируем роутер
 export default router;
