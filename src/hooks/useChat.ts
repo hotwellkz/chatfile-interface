@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { supabase } from '@/integrations/supabase/client'
 
 type Message = {
   role: 'user' | 'assistant'
@@ -19,25 +18,18 @@ export const useChat = () => {
       const newMessage: Message = { role: 'user', content }
       setMessages(prev => [...prev, newMessage])
 
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) throw new Error('Не авторизован')
-
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            messages: [...messages, newMessage],
-          }),
-        }
-      )
+      const response = await fetch('http://localhost:3000/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: [...messages, newMessage],
+        }),
+      })
 
       if (!response.ok) {
-        throw new Error('Ошибка при отправке сообщения')
+        throw new Error('Ошибка сервера')
       }
 
       const assistantMessage = await response.json()
