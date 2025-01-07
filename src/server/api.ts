@@ -33,11 +33,11 @@ router.post('/api/chat', async (req: Request, res: Response) => {
       content: completion.choices[0]?.message?.content || "Извините, не удалось сгенерировать ответ",
     };
 
-    res.json(assistantMessage);
+    return res.json(assistantMessage);
 
   } catch (error) {
     console.error('Error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
