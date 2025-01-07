@@ -1,9 +1,9 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import tsconfigPaths from 'vite-tsconfig-paths';
-import nodePolyfills from 'vite-plugin-node-polyfills';
-import optimizeCssModules from 'vite-plugin-optimize-css-modules';
+import { tsconfigPaths } from 'vite-tsconfig-paths';
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
+import { optimizeCssModules } from 'vite-plugin-optimize-css-modules';
 import { componentTagger } from "lovable-tagger";
 
 export default defineConfig(({ mode }) => ({
@@ -23,6 +23,7 @@ export default defineConfig(({ mode }) => ({
     outDir: 'build',
   },
   server: {
-    port: 3000,
+    port: 8080,
+    host: "::",
   },
 }));
