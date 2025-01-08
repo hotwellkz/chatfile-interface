@@ -6,7 +6,6 @@ dotenv.config();
 
 const router = express.Router();
 
-// Настраиваем CORS с необходимыми заголовками
 router.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
@@ -14,7 +13,6 @@ router.use(cors({
   credentials: true,
 }));
 
-// Добавляем middleware для установки заголовков безопасности
 router.use((req, res, next) => {
   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
   res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
@@ -31,28 +29,20 @@ interface ChatRequest {
   }>;
 }
 
-interface ChatResponse {
-  content: string;
-  action?: 'create_file';
-  filename?: string;
-}
-
-// Обработчик POST запросов к /api/chat
-router.post<{}, {}, ChatRequest>('/chat', async (req, res) => {
+router.post('/chat', async (req: express.Request<{}, {}, ChatRequest>, res: express.Response) => {
   try {
     const { messages } = req.body;
 
-    // Здесь должна быть логика обработки чата
-    const response: ChatResponse = {
+    const response = {
       content: "Ответ от AI",
       action: "create_file",
       filename: "example.txt"
     };
 
-    return res.json(response);
+    res.json(response);
   } catch (error) {
     console.error('Error processing chat request:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
