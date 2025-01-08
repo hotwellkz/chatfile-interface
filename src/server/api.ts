@@ -2,7 +2,8 @@ import express from 'express';
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
 import { MAX_TOKENS, CONTINUE_PROMPT } from '../utils/constants.js';
-import type { Message } from '../types/index.js';
+import { streamText } from '../lib/stream-text.js';
+import type { Messages, StreamingOptions } from '../types/index.js';
 
 dotenv.config();
 

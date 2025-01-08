@@ -7,7 +7,7 @@ import { ChatHeader } from "./chat/ChatHeader";
 import { FilePreview } from "./FilePreview";
 import { ExamplePrompts } from "./ExamplePrompts";
 import Cookies from 'js-cookie';
-import { MODEL_LIST } from '@/utils/constants';
+import { initializeModelList } from '@/utils/constants';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -128,7 +128,7 @@ export function Chat() {
         provider={{ 
           name: 'openai', 
           label: 'OpenAI',
-          models: MODEL_LIST // Используем MODEL_LIST напрямую вместо async функции
+          models: initializeModelList() // Добавляем models из constants
         }}
         apiKey={apiKeys['openai'] || ''}
         onApiKeyChange={(key) => {
