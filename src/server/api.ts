@@ -8,6 +8,7 @@ const router = express.Router();
 router.use(cors({
   origin: [
     'https://bespoke-bavarois-8deceb.netlify.app',
+    'https://7db8c8ea-906e-471a-b06c-1e99127746c8.lovableproject.com',
     'http://localhost:5173' // для локальной разработки
   ],
   methods: ['POST'],
