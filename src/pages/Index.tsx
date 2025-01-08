@@ -1,7 +1,7 @@
 import { Header } from "@/components/Header";
 import { ChatPanel } from "@/components/ChatPanel";
 import { FileExplorer } from "@/components/FileExplorer";
-import { PreviewPanel } from "@/components/PreviewPanel";
+import { Preview } from "@/components/Preview";
 import { useState } from "react";
 
 const Index = () => {
@@ -64,7 +64,7 @@ const Index = () => {
         />
         
         <div className="panel flex-1">
-          <PreviewPanel />
+          <Preview />
         </div>
       </div>
     </div>
