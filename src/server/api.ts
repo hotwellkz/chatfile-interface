@@ -32,12 +32,13 @@ function parseCookies(cookieHeader: string) {
 }
 
 // Handle CORS preflight requests
-router.options('/chat', (req, res) => {
+router.options('/chat', (_req, res) => {
   res.writeHead(200, corsHeaders);
   res.end();
 });
 
-router.post('/chat', async (req, res) => {
+// Fix TypeScript error by using the correct router.post type signature
+router.post('/chat', async (req: express.Request, res: express.Response) => {
   try {
     const { messages, model } = req.body;
     const cookieHeader = req.headers.cookie;
