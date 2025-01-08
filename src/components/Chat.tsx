@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Send } from "lucide-react";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { createFile } from "@/lib/fileSystem";
+import { createFile, initWebContainer } from "@/lib/fileSystem";
 
 type Message = {
   role: 'user' | 'assistant';
@@ -22,6 +22,27 @@ export function Chat() {
   const [isLoading, setIsLoading] = useState(false);
   const [fileUrl, setFileUrl] = useState<string>('');
   const { toast } = useToast();
+
+  // Инициализируем WebContainer один раз при монтировании компонента
+  useEffect(() => {
+    const initContainer = async () => {
+      try {
+        await initWebContainer();
+        console.log('WebContainer initialized successfully in Chat component');
+      } catch (error) {
+        console.error('Failed to initialize WebContainer in Chat component:', error);
+        toast({
+          variant: "destructive",
+          title: "Ошибка инициализации",
+          description: "Не удалось инициализировать WebContainer"
+        });
+      }
+    };
+
+    initContainer();
+
+    // Очистка не требуется, так как WebContainer управляется глобально
+  }, []);
 
   const handleAIResponse = async (data: AIResponse) => {
     if (data.action === 'create_file' && data.filename) {
@@ -76,7 +97,6 @@ export function Chat() {
       setMessages(prev => [...prev, aiMessage]);
       setInput('');
       
-      // Обработка ответа от ИИ
       await handleAIResponse(data);
       
     } catch (error) {

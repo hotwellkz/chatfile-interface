@@ -1,19 +1,28 @@
 import { WebContainer } from '@webcontainer/api';
 
 let webcontainerInstance: WebContainer | null = null;
+let isInitializing = false;
 
 /**
  * Инициализирует экземпляр WebContainer если он еще не создан
  */
 export async function initWebContainer() {
+  if (isInitializing) {
+    console.log('WebContainer initialization already in progress...');
+    return webcontainerInstance;
+  }
+
   if (!webcontainerInstance) {
     try {
+      isInitializing = true;
       console.log('Initializing new WebContainer instance...');
       webcontainerInstance = await WebContainer.boot();
       console.log('WebContainer initialized successfully');
     } catch (error) {
       console.error('Error initializing WebContainer:', error);
       throw error;
+    } finally {
+      isInitializing = false;
     }
   } else {
     console.log('Reusing existing WebContainer instance');
@@ -27,6 +36,9 @@ export async function initWebContainer() {
 export async function createFile(name: string, content: string) {
   try {
     const container = await initWebContainer();
+    if (!container) {
+      throw new Error('WebContainer not initialized');
+    }
     console.log(`Creating file: ${name} with content: ${content}`);
     await container.fs.writeFile(name, content);
     console.log(`File ${name} created successfully.`);
@@ -43,6 +55,9 @@ export async function readFile(name: string): Promise<string> {
   try {
     console.log('Reading file:', name);
     const container = await initWebContainer();
+    if (!container) {
+      throw new Error('WebContainer not initialized');
+    }
     const fileContent = await container.fs.readFile(name, 'utf-8');
     console.log('File content read successfully:', fileContent);
     return fileContent;
