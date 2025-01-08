@@ -1,21 +1,27 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import apiRouter from './api.js';
+import apiRouter from './api';
 
 dotenv.config();
 
 const app = express();
 
 app.use(cors({
-  origin: '*',
+  origin: process.env.NODE_ENV === 'production' ? process.env.FRONTEND_URL : '*',
   methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
 
 app.use(express.json());
 
-// Монтируем API роуты на /api
+// Добавляем базовый маршрут для проверки работы сервера
+app.get('/', (req, res) => {
+  res.json({ status: 'API is running' });
+});
+
+// Монтируем API роуты
 app.use('/api', apiRouter);
 
 const PORT = process.env.PORT || 3001;
