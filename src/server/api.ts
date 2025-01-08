@@ -15,7 +15,7 @@ router.use(cors({
   credentials: true
 }));
 
-// Инициализируем OpenAI
+// Инициализируем OpenAI с ключом из переменных окружения
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
