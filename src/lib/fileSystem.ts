@@ -7,6 +7,12 @@ let isInitializing = false;
  * Инициализирует экземпляр WebContainer если он еще не создан
  */
 export async function initWebContainer() {
+  // Проверяем, что код выполняется в браузере
+  if (typeof window === 'undefined') {
+    console.warn('WebContainer is not supported in server-side environment.');
+    return null;
+  }
+
   if (isInitializing) {
     console.log('WebContainer initialization already in progress...');
     return webcontainerInstance;
@@ -34,6 +40,11 @@ export async function initWebContainer() {
  * Создает файл с указанным именем и содержимым
  */
 export async function createFile(name: string, content: string) {
+  if (typeof window === 'undefined') {
+    console.warn('WebContainer operations are not supported in server-side environment.');
+    return;
+  }
+
   try {
     const container = await initWebContainer();
     if (!container) {
@@ -52,6 +63,11 @@ export async function createFile(name: string, content: string) {
  * Читает содержимое файла
  */
 export async function readFile(name: string): Promise<string> {
+  if (typeof window === 'undefined') {
+    console.warn('WebContainer operations are not supported in server-side environment.');
+    return '';
+  }
+
   try {
     console.log('Reading file:', name);
     const container = await initWebContainer();
@@ -71,6 +87,10 @@ export async function readFile(name: string): Promise<string> {
  * Очищает и уничтожает экземпляр WebContainer
  */
 export async function destroyWebContainer() {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
   if (webcontainerInstance) {
     try {
       console.log('Destroying WebContainer instance...');
