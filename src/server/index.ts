@@ -7,17 +7,15 @@ dotenv.config();
 
 const app = express();
 
-// Настройка CORS для разрешения запросов с любого домена
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Парсинг JSON в теле запроса
 app.use(express.json());
 
-// Подключаем маршруты API
+// Монтируем API роуты на /api
 app.use('/api', apiRouter);
 
 const PORT = process.env.PORT || 3001;
