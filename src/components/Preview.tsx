@@ -1,12 +1,37 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Maximize2, Smartphone, RefreshCw } from "lucide-react";
 import { Button } from "./ui/button";
+import { readFile } from "@/lib/fileSystem";
 
 interface PreviewProps {
   fileUrl?: string;
 }
 
 const Preview = ({ fileUrl }: PreviewProps) => {
+  const [content, setContent] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const loadFileContent = async () => {
+      if (!fileUrl) return;
+      
+      setIsLoading(true);
+      try {
+        // Извлекаем имя файла из URL
+        const filename = fileUrl.replace('webcontainer://', '');
+        const fileContent = await readFile(filename);
+        setContent(fileContent);
+      } catch (error) {
+        console.error('Error loading file:', error);
+        setContent('Ошибка загрузки файла');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadFileContent();
+  }, [fileUrl]);
+
   return (
     <div className="flex flex-col h-full">
       <div className="p-2 border-b border-border flex items-center justify-between">
@@ -27,16 +52,18 @@ const Preview = ({ fileUrl }: PreviewProps) => {
       </div>
       
       <div className="flex-1 bg-background">
-        {!fileUrl ? (
+        {isLoading ? (
           <div className="flex items-center justify-center h-full text-muted-foreground">
-            No preview available
+            Загрузка...
+          </div>
+        ) : !fileUrl ? (
+          <div className="flex items-center justify-center h-full text-muted-foreground">
+            Файл ещё не создан
           </div>
         ) : (
-          <iframe 
-            src={fileUrl} 
-            className="w-full h-[400px]" 
-            title="Preview"
-          />
+          <div className="p-4">
+            <pre className="whitespace-pre-wrap">{content}</pre>
+          </div>
         )}
       </div>
     </div>
