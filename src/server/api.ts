@@ -53,7 +53,7 @@ router.post('/chat', async (req: express.Request, res: express.Response) => {
     const stream = new SwitchableStream();
 
     const completion = await openai.chat.completions.create({
-      model: model || "gpt-4",
+      model: model || "gpt-4o-mini",
       messages: messages,
       temperature: 0.7,
       max_tokens: MAX_TOKENS,
@@ -80,7 +80,7 @@ router.post('/chat', async (req: express.Request, res: express.Response) => {
         ];
 
         const continuationCompletion = await openai.chat.completions.create({
-          model: model || "gpt-4",
+          model: model || "gpt-4o-mini",
           messages: continuationMessages,
           temperature: 0.7,
           max_tokens: MAX_TOKENS,
