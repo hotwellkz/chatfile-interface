@@ -1,19 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
-import { Send, Paperclip } from "lucide-react";
-import { Button } from "./ui/button";
-import { Textarea } from "./ui/textarea";
+import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { ModelSelector } from "./ModelSelector";
-import { FilePreview } from "./FilePreview";
-import { SpeechRecognition } from "./SpeechRecognition";
+import { ChatInput } from "./chat/ChatInput";
+import { ChatMessages } from "./chat/ChatMessages";
+import { ChatControls } from "./chat/ChatControls";
 import Cookies from 'js-cookie';
-import { initializeModelList, MODEL_LIST } from '@/utils/constants';
-import { ProviderInfo } from '@/types';
-import { APIKeyManager } from './APIKeyManager';
-import { ExamplePrompts } from './ExamplePrompts';
-
-const TEXTAREA_MIN_HEIGHT = 150;
-const TEXTAREA_MAX_HEIGHT = 400;
 
 interface Message {
   role: 'user' | 'assistant';
@@ -26,57 +17,11 @@ export function Chat() {
   const [isLoading, setIsLoading] = useState(false);
   const [model, setModel] = useState('gpt-4');
   const [files, setFiles] = useState<File[]>([]);
-  const [transcript, setTranscript] = useState('');
   const { toast } = useToast();
-  const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
-  const [modelList, setModelList] = useState(MODEL_LIST);
-  const [isModelSettingsCollapsed, setIsModelSettingsCollapsed] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [recognition, setRecognition] = useState<any>(null);
 
   const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(event.target.value);
   };
-
-  useEffect(() => {
-    const storedApiKeys = Cookies.get('apiKeys');
-    if (storedApiKeys) {
-      const parsedKeys = JSON.parse(storedApiKeys);
-      if (typeof parsedKeys === 'object' && parsedKeys !== null) {
-        setApiKeys(parsedKeys);
-      }
-    }
-    initializeModelList().then((modelList) => {
-      setModelList(modelList);
-    });
-    if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-
-      recognition.onresult = (event) => {
-        const transcript = Array.from(event.results)
-          .map((result) => result[0])
-          .map((result) => result.transcript)
-          .join('');
-        setTranscript(transcript);
-        if (handleInputChange) {
-          const syntheticEvent = {
-            target: { value: transcript },
-          } as React.ChangeEvent<HTMLTextAreaElement>;
-          handleInputChange(syntheticEvent);
-        }
-      };
-
-      recognition.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
-        setIsListening(false);
-      };
-
-      setRecognition(recognition);
-    }
-  }, []);
 
   const sendMessage = async () => {
     if (!input.trim() && files.length === 0) return;
@@ -133,9 +78,16 @@ export function Chat() {
     }
   };
 
-  const handleSpeechTranscript = (text: string) => {
-    setInput(text);
-    setTranscript(text);
+  const handleFileSelect = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+      const selectedFiles = Array.from((e.target as HTMLInputElement).files || []);
+      setFiles(prev => [...prev, ...selectedFiles]);
+    };
+    input.click();
   };
 
   const handlePaste = async (e: React.ClipboardEvent) => {
@@ -176,79 +128,39 @@ export function Chat() {
     (e.target as HTMLTextAreaElement).style.border = '1px solid var(--border)';
   };
 
+  const handleSpeechTranscript = (text: string) => {
+    setInput(text);
+  };
+
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-auto p-4 space-y-4">
-        {messages.map((msg, idx) => (
-          <div
-            key={idx}
-            className={`p-3 rounded-lg ${
-              msg.role === 'user'
-                ? 'bg-primary text-primary-foreground ml-auto'
-                : 'bg-muted'
-            } max-w-[80%]`}
-          >
-            {msg.content}
-          </div>
-        ))}
+      <div className="flex-1 overflow-auto">
+        <ChatMessages messages={messages} />
       </div>
 
       <div className="p-4 border-t border-border">
         <ModelSelector model={model} setModel={setModel} />
 
-        <FilePreview
-          files={files}
-          onRemove={(index) => setFiles(files.filter((_, i) => i !== index))}
-        />
-
         <div className="flex gap-2 mt-4">
-          <div className="flex-1">
-            <Textarea
-              value={input}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyPress}
-              onPaste={handlePaste}
-              onDrop={handleDrop}
-              onDragEnter={handleDragEnter}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              placeholder="Введите сообщение..."
-              style={{
-                minHeight: TEXTAREA_MIN_HEIGHT,
-                maxHeight: TEXTAREA_MAX_HEIGHT
-              }}
-              className="resize-none transition-all duration-200 hover:border-primary"
-              disabled={isLoading}
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Button
-              size="icon"
-              onClick={sendMessage}
-              disabled={isLoading}
-            >
-              <Send className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.multiple = true;
-                input.accept = 'image/*';
-                input.onchange = (e) => {
-                  const selectedFiles = Array.from((e.target as HTMLInputElement).files || []);
-                  setFiles(prev => [...prev, ...selectedFiles]);
-                };
-                input.click();
-              }}
-              className="hover:bg-accent"
-            >
-              <Paperclip className="h-4 w-4" />
-            </Button>
-            <SpeechRecognition onTranscript={handleSpeechTranscript} />
-          </div>
+          <ChatInput
+            input={input}
+            files={files}
+            isLoading={isLoading}
+            onInputChange={handleInputChange}
+            onKeyPress={handleKeyPress}
+            onPaste={handlePaste}
+            onDrop={handleDrop}
+            onDragEnter={handleDragEnter}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onRemoveFile={(index) => setFiles(files.filter((_, i) => i !== index))}
+          />
+          <ChatControls
+            onSend={sendMessage}
+            onFileSelect={handleFileSelect}
+            isLoading={isLoading}
+            onTranscript={handleSpeechTranscript}
+          />
         </div>
 
         {input.length > 3 && (
