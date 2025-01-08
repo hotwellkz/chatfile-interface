@@ -12,7 +12,8 @@ export const SpeechRecognition = ({ onTranscript }: SpeechRecognitionProps) => {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      // Fix TypeScript errors by using type assertion
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (SpeechRecognition) {
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
@@ -53,16 +54,19 @@ export const SpeechRecognition = ({ onTranscript }: SpeechRecognitionProps) => {
   return (
     <Button
       variant={isListening ? "destructive" : "outline"}
-      size="sm"
+      size="icon"
       onClick={toggleListening}
       disabled={!recognition}
+      className="hover:bg-accent"
     >
       {isListening ? (
-        <MicOff className="w-4 h-4 mr-2" />
+        <MicOff className="h-4 w-4" />
       ) : (
-        <Mic className="w-4 h-4 mr-2" />
+        <Mic className="h-4 w-4" />
       )}
-      {isListening ? "Остановить" : "Начать запись"}
+      <span className="sr-only">
+        {isListening ? "Остановить запись" : "Начать запись"}
+      </span>
     </Button>
   );
 };

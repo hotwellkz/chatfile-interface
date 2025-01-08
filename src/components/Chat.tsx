@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Send } from "lucide-react";
+import { Send, Paperclip, Mic, MicOff } from "lucide-react";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -99,12 +99,6 @@ export function Chat() {
       <div className="p-4 border-t border-border">
         <ModelSelector model={model} setModel={setModel} />
         
-        <FileUpload 
-          files={files}
-          onUpload={(newFiles) => setFiles(prev => [...prev, ...newFiles])}
-          onRemove={(index) => setFiles(files.filter((_, i) => i !== index))}
-        />
-
         <div className="flex gap-2 mt-4">
           <div className="flex-1">
             <Textarea
@@ -124,9 +118,47 @@ export function Chat() {
             >
               <Send className="h-4 w-4" />
             </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => document.querySelector('input[type="file"]')?.click()}
+              className="hover:bg-accent"
+            >
+              <Paperclip className="h-4 w-4" />
+              <input
+                type="file"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                  const selectedFiles = Array.from(e.target.files || []);
+                  setFiles(prev => [...prev, ...selectedFiles]);
+                }}
+              />
+            </Button>
             <SpeechRecognition onTranscript={handleSpeechTranscript} />
           </div>
         </div>
+
+        {files.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            {files.map((file, index) => (
+              <div 
+                key={index}
+                className="flex items-center gap-2 bg-secondary p-2 rounded"
+              >
+                <span className="text-sm">{file.name}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setFiles(files.filter((_, i) => i !== index))}
+                >
+                  <span className="sr-only">Удалить файл</span>
+                  ×
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
