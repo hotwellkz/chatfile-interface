@@ -38,7 +38,7 @@ interface ChatResponse {
 }
 
 // Обработчик POST запросов к /api/chat
-router.post('/chat', async (req: express.Request<{}, {}, ChatRequest>, res: express.Response) => {
+router.post<{}, {}, ChatRequest>('/chat', async (req, res) => {
   try {
     const { messages } = req.body;
 
