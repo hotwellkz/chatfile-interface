@@ -1,5 +1,5 @@
-import { useState, useEffect, RefCallback } from 'react';
-import { Send, Paperclip, Mic } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { Send, Paperclip } from "lucide-react";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -7,7 +7,8 @@ import { ModelSelector } from "./ModelSelector";
 import { FilePreview } from "./FilePreview";
 import { SpeechRecognition } from "./SpeechRecognition";
 import Cookies from 'js-cookie';
-import { initializeModelList, MODEL_LIST, PROVIDER_LIST } from '~/utils/constants';
+import { initializeModelList, MODEL_LIST } from '@/utils/constants';
+import { ProviderInfo } from '@/types';
 import { APIKeyManager } from './APIKeyManager';
 import { ExamplePrompts } from './ExamplePrompts';
 
