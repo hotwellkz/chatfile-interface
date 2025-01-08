@@ -11,13 +11,6 @@ type Message = {
   content: string;
 };
 
-type AIResponse = {
-  content: string;
-  action?: 'create_file';
-  filename?: string;
-  fileContent?: string;
-};
-
 export function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -25,23 +18,35 @@ export function Chat() {
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const { toast } = useToast();
 
-  const handleAIResponse = async (data: AIResponse) => {
-    if (data.action === 'create_file' && data.filename && data.fileContent) {
-      try {
-        await createFile(data.filename, data.fileContent);
-        const url = `webcontainer://${data.filename}`;
-        setPreviewUrl(url);
-        toast({
-          title: "Файл создан",
-          description: `Создан файл ${data.filename}`
-        });
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Ошибка",
-          description: "Не удалось создать файл"
-        });
+  const handleAIResponse = async (content: string) => {
+    try {
+      // Проверяем, содержит ли ответ команду создания файла
+      if (content.includes('<lov-write')) {
+        const fileNameMatch = content.match(/file_path="([^"]+)"/);
+        const fileName = fileNameMatch ? fileNameMatch[1] : null;
+        
+        if (fileName) {
+          // Извлекаем содержимое файла между тегами lov-write
+          const contentMatch = content.match(/<lov-write[^>]*>([\s\S]*?)<\/lov-write>/);
+          const fileContent = contentMatch ? contentMatch[1].trim() : '';
+          
+          await createFile(fileName, fileContent);
+          const url = `webcontainer://${fileName}`;
+          setPreviewUrl(url);
+          
+          toast({
+            title: "Файл создан",
+            description: `Создан файл ${fileName}`,
+          });
+        }
       }
+    } catch (error) {
+      console.error('Error handling AI response:', error);
+      toast({
+        variant: "destructive",
+        title: "Ошибка",
+        description: "Не удалось создать файл"
+      });
     }
   };
 
@@ -69,7 +74,7 @@ export function Chat() {
         throw new Error('Ошибка сервера');
       }
 
-      const data: AIResponse = await response.json();
+      const data = await response.json();
       const aiMessage: Message = {
         role: 'assistant',
         content: data.content
@@ -78,8 +83,8 @@ export function Chat() {
       setMessages(prev => [...prev, aiMessage]);
       setInput('');
       
-      // Обработка ответа AI для создания файла
-      await handleAIResponse(data);
+      // Обрабатываем ответ AI для создания файла
+      await handleAIResponse(data.content);
       
     } catch (error) {
       toast({
