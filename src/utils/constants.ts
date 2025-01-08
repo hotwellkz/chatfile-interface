@@ -1,16 +1,9 @@
-import type { ProviderInfo } from '@/types';
+export const TEXTAREA_MIN_HEIGHT = 150;
+export const TEXTAREA_MAX_HEIGHT = 400;
 
 export const MODEL_LIST = [
-  'gpt-4o',
-  'gpt-4o-mini'
-];
-
-export const PROVIDER_LIST: ProviderInfo[] = [
-  {
-    name: 'openai',
-    label: 'OpenAI',
-    models: MODEL_LIST
-  }
+  'gpt-4',
+  'gpt-4-mini'
 ];
 
 export const initializeModelList = async () => {
