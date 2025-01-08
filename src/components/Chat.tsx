@@ -3,7 +3,7 @@ import { Send } from "lucide-react";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { createFile, initWebContainer } from "@/lib/fileSystem";
+import { createFile, initWebContainer, destroyWebContainer } from "@/lib/fileSystem";
 
 type Message = {
   role: 'user' | 'assistant';
@@ -41,7 +41,12 @@ export function Chat() {
 
     initContainer();
 
-    // Очистка не требуется, так как WebContainer управляется глобально
+    // Очищаем WebContainer при размонтировании компонента
+    return () => {
+      destroyWebContainer().catch(error => {
+        console.error('Error destroying WebContainer:', error);
+      });
+    };
   }, []);
 
   const handleAIResponse = async (data: AIResponse) => {

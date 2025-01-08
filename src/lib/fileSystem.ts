@@ -68,6 +68,25 @@ export async function readFile(name: string): Promise<string> {
 }
 
 /**
+ * Очищает и уничтожает экземпляр WebContainer
+ */
+export async function destroyWebContainer() {
+  if (webcontainerInstance) {
+    try {
+      console.log('Destroying WebContainer instance...');
+      await webcontainerInstance.teardown();
+      webcontainerInstance = null;
+      console.log('WebContainer instance successfully destroyed.');
+    } catch (error) {
+      console.error('Error destroying WebContainer:', error);
+      throw error;
+    }
+  } else {
+    console.log('No WebContainer instance to destroy.');
+  }
+}
+
+/**
  * Очищает экземпляр WebContainer
  */
 export function clearWebContainer() {
