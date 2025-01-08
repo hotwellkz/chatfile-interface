@@ -23,26 +23,36 @@ export function Chat() {
   const [fileUrl, setFileUrl] = useState<string>('');
   const { toast } = useToast();
 
-  // Инициализируем WebContainer один раз при монтировании компонента
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      console.warn('WebContainer is not supported in server-side environment.');
+      return;
+    }
+
+    let isMounted = true;
+
     const initContainer = async () => {
       try {
         await initWebContainer();
-        console.log('WebContainer initialized successfully in Chat component');
+        if (isMounted) {
+          console.log('WebContainer initialized successfully in Chat component');
+        }
       } catch (error) {
-        console.error('Failed to initialize WebContainer in Chat component:', error);
-        toast({
-          variant: "destructive",
-          title: "Ошибка инициализации",
-          description: "Не удалось инициализировать WebContainer"
-        });
+        if (isMounted) {
+          console.error('Failed to initialize WebContainer in Chat component:', error);
+          toast({
+            variant: "destructive",
+            title: "Ошибка инициализации",
+            description: "Не удалось инициализировать WebContainer. Проверьте консоль для деталей."
+          });
+        }
       }
     };
 
     initContainer();
 
-    // Очищаем WebContainer при размонтировании компонента
     return () => {
+      isMounted = false;
       destroyWebContainer().catch(error => {
         console.error('Error destroying WebContainer:', error);
       });
@@ -60,10 +70,11 @@ export function Chat() {
           description: `Создан файл ${data.filename}`
         });
       } catch (error) {
+        console.error('Error creating file:', error);
         toast({
           variant: "destructive",
           title: "Ошибка",
-          description: "Не удалось создать файл"
+          description: "Не удалось создать файл. Проверьте консоль для деталей."
         });
       }
     }
@@ -105,6 +116,7 @@ export function Chat() {
       await handleAIResponse(data);
       
     } catch (error) {
+      console.error('Error sending message:', error);
       toast({
         variant: "destructive",
         title: "Ошибка",
