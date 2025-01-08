@@ -17,11 +17,6 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
 function parseCookies(cookieHeader: string) {
   const cookies: Record<string, string> = {};
   if (!cookieHeader) return cookies;
@@ -37,10 +32,6 @@ function parseCookies(cookieHeader: string) {
 }
 
 router.post('/chat', async (req: express.Request, res: express.Response) => {
-  if (req.method === 'OPTIONS') {
-    return res.status(200).set(corsHeaders).send();
-  }
-
   try {
     const { messages, model } = req.body;
     const cookieHeader = req.headers.cookie;
@@ -98,10 +89,10 @@ router.post('/chat', async (req: express.Request, res: express.Response) => {
 
     res.end();
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Ошибка при обработке запроса чата:', error);
     
-    if (error instanceof Error && error.message.includes('API key')) {
+    if (error.message?.includes('API key')) {
       return res.status(401).json({ 
         error: 'Неверный или отсутствующий API ключ',
         details: error.message
