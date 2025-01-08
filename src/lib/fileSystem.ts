@@ -8,6 +8,10 @@ let webcontainerInstance: WebContainer | null = null;
 export async function initWebContainer() {
   if (!webcontainerInstance) {
     try {
+      // Очищаем предыдущий экземпляр если он существует
+      if (webcontainerInstance) {
+        webcontainerInstance = null;
+      }
       webcontainerInstance = await WebContainer.boot();
       console.log('WebContainer initialized successfully');
     } catch (error) {
@@ -25,6 +29,9 @@ export async function initWebContainer() {
  */
 export async function createFile(name: string, content: string) {
   try {
+    // Очищаем существующий экземпляр перед созданием нового файла
+    clearWebContainer();
+    
     console.log('Creating file:', name, 'with content:', content);
     const container = await initWebContainer();
     await container.fs.writeFile(name, content);
