@@ -6,7 +6,7 @@ interface PreviewProps {
   fileUrl?: string;
 }
 
-export const Preview = ({ fileUrl }: PreviewProps) => {
+const Preview = ({ fileUrl }: PreviewProps) => {
   return (
     <div className="flex flex-col h-full">
       <div className="p-2 border-b border-border flex items-center justify-between">
@@ -42,3 +42,5 @@ export const Preview = ({ fileUrl }: PreviewProps) => {
     </div>
   );
 };
+
+export default Preview;
