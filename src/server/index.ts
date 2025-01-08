@@ -1,20 +1,20 @@
 import express from 'express';
-import cors from 'cors';
 import { router } from './api';
+import dotenv from 'dotenv';
+
+// Загружаем переменные окружения
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Настраиваем CORS для домена Netlify
-app.use(cors({
-  origin: ['https://bespoke-bavarois-8deceb.netlify.app'],
-  methods: ['GET', 'POST'],
-  credentials: true
-}));
-
+// Middleware для парсинга JSON
 app.use(express.json());
+
+// Используем роутер для /api путей
 app.use('/api', router);
 
+// Запускаем сервер
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });

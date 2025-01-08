@@ -1,22 +1,39 @@
 import express from 'express';
+import cors from 'cors';
 import { OpenAI } from 'openai';
 
 const router = express.Router();
+
+// Настраиваем CORS для разрешенных доменов
+router.use(cors({
+  origin: [
+    'https://7db8c8ea-906e-471a-b06c-1e99127746c8.lovableproject.com',
+    'http://localhost:5173' // для локальной разработки
+  ],
+  methods: ['POST'],
+  credentials: true
+}));
+
+// Инициализируем OpenAI
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Типы для запроса
+type Message = {
+  role: 'user' | 'assistant';
+  content: string;
+};
+
 interface ChatRequest {
-  messages: Array<{
-    role: 'system' | 'user' | 'assistant';
-    content: string;
-  }>;
+  messages: Message[];
 }
 
+// Обработчик POST запроса
 router.post('/chat', async (req: express.Request<{}, {}, ChatRequest>, res: express.Response) => {
   try {
     const { messages } = req.body;
-    
+
     if (!messages || !Array.isArray(messages)) {
       return res.status(400).json({ error: 'Invalid messages format' });
     }
@@ -33,6 +50,7 @@ router.post('/chat', async (req: express.Request<{}, {}, ChatRequest>, res: expr
       role: 'assistant',
       content: completion.choices[0].message.content
     });
+    
   } catch (error) {
     console.error('Error in chat endpoint:', error);
     res.status(500).json({ error: 'Internal server error' });
