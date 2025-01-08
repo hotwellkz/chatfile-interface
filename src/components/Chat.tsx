@@ -3,8 +3,6 @@ import { Send } from "lucide-react";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { createFile } from "@/lib/fileSystem";
-import Preview from "./Preview";
 
 type Message = {
   role: 'user' | 'assistant';
@@ -15,40 +13,7 @@ export function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string>('');
   const { toast } = useToast();
-
-  const handleAIResponse = async (content: string) => {
-    try {
-      // Проверяем, содержит ли ответ команду создания файла
-      if (content.includes('<lov-write')) {
-        const fileNameMatch = content.match(/file_path="([^"]+)"/);
-        const fileName = fileNameMatch ? fileNameMatch[1] : null;
-        
-        if (fileName) {
-          // Извлекаем содержимое файла между тегами lov-write
-          const contentMatch = content.match(/<lov-write[^>]*>([\s\S]*?)<\/lov-write>/);
-          const fileContent = contentMatch ? contentMatch[1].trim() : '';
-          
-          await createFile(fileName, fileContent);
-          const url = `webcontainer://${fileName}`;
-          setPreviewUrl(url);
-          
-          toast({
-            title: "Файл создан",
-            description: `Создан файл ${fileName}`,
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error handling AI response:', error);
-      toast({
-        variant: "destructive",
-        title: "Ошибка",
-        description: "Не удалось создать файл"
-      });
-    }
-  };
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -82,9 +47,6 @@ export function Chat() {
       
       setMessages(prev => [...prev, aiMessage]);
       setInput('');
-      
-      // Обрабатываем ответ AI для создания файла
-      await handleAIResponse(data.content);
       
     } catch (error) {
       toast({
@@ -120,8 +82,6 @@ export function Chat() {
           </div>
         ))}
       </div>
-      
-      <Preview fileUrl={previewUrl} />
       
       <div className="p-4 border-t border-border">
         <div className="flex gap-2">
