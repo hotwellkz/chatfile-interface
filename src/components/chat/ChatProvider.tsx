@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
-import { Chat } from './Chat';
+import { Chat } from '../Chat';
 
 export function ChatProvider() {
   const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
