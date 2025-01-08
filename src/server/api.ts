@@ -17,44 +17,41 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Определяем интерфейс для тела запроса
 interface ChatRequest {
-  messages: Array<{
-    role: 'user' | 'assistant';
-    content: string;
-  }>;
+  prompt: string;
 }
 
-router.post('/chat', async (req: express.Request<{}, {}, ChatRequest>, res: express.Response) => {
+router.post('/chat', async (req: express.Request, res: express.Response) => {
   try {
-    const { messages } = req.body;
+    const { prompt } = req.body as ChatRequest;
 
-    if (!messages || !Array.isArray(messages)) {
-      return res.status(400).json({ error: 'Неверный формат сообщений' });
+    if (!prompt) {
+      return res.status(400).json({ error: 'Отсутствует поле prompt' });
     }
 
-    console.log('Отправка запроса к OpenAI:', messages);
+    console.log('Отправка запроса к OpenAI:', prompt);
 
     // Отправляем запрос к OpenAI API
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: messages,
+      messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
       max_tokens: 1000,
     });
 
     // Получаем ответ от OpenAI
-    const aiResponse = completion.choices[0].message;
+    const answer = completion.choices[0].message.content;
 
-    console.log('Получен ответ от OpenAI:', aiResponse);
+    console.log('Получен ответ от OpenAI:', answer);
 
-    // Формируем ответ с дополнительными действиями
-    const response = {
-      content: aiResponse.content,
+    // Формируем ответ
+    res.json({ 
+      answer,
       action: "create_file",
       filename: "example.txt"
-    };
+    });
 
-    res.json(response);
   } catch (error) {
     console.error('Ошибка при обработке запроса чата:', error);
     res.status(500).json({ 
