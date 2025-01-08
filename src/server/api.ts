@@ -1,10 +1,15 @@
 import express from 'express';
-import { OpenAI } from 'openai';
+import OpenAI from 'openai';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 const router = express.Router();
+
+// Инициализация OpenAI с API ключом
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 interface ChatRequest {
   messages: Array<{
@@ -16,11 +21,21 @@ interface ChatRequest {
 router.post('/chat', async (req: express.Request<{}, {}, ChatRequest>, res: express.Response) => {
   try {
     const { messages } = req.body;
-    
-    // Здесь можно добавить интеграцию с OpenAI
-    // Пока возвращаем тестовый ответ
+
+    // Отправляем запрос к OpenAI API
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: messages,
+      temperature: 0.7,
+      max_tokens: 1000,
+    });
+
+    // Получаем ответ от OpenAI
+    const aiResponse = completion.choices[0].message;
+
+    // Формируем ответ с дополнительными действиями
     const response = {
-      content: "Тестовый ответ от сервера",
+      content: aiResponse.content,
       action: "create_file",
       filename: "example.txt"
     };
