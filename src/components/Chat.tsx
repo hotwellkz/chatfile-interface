@@ -4,7 +4,6 @@ import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { createFile } from "@/lib/fileSystem";
-import Preview from "./Preview";
 
 type Message = {
   role: 'user' | 'assistant';
@@ -25,21 +24,16 @@ export function Chat() {
   const { toast } = useToast();
 
   const handleAIResponse = async (data: AIResponse) => {
-    console.log('Received AI response:', data); // Добавляем логирование
-
     if (data.action === 'create_file' && data.filename) {
       try {
-        console.log('Creating file:', data.filename, 'with content:', data.content);
         await createFile(data.filename, data.content);
         const url = `webcontainer://${data.filename}`;
-        console.log('Setting file URL:', url);
         setFileUrl(url);
         toast({
           title: "Файл создан",
           description: `Создан файл ${data.filename}`
         });
       } catch (error) {
-        console.error('Error in handleAIResponse:', error);
         toast({
           variant: "destructive",
           title: "Ошибка",
@@ -74,8 +68,6 @@ export function Chat() {
       }
 
       const data: AIResponse = await response.json();
-      console.log('Server response:', data); // Добавляем логирование
-
       const aiMessage: Message = {
         role: 'assistant',
         content: data.content
@@ -84,10 +76,10 @@ export function Chat() {
       setMessages(prev => [...prev, aiMessage]);
       setInput('');
       
+      // Обработка ответа от ИИ
       await handleAIResponse(data);
       
     } catch (error) {
-      console.error('Error in sendMessage:', error);
       toast({
         variant: "destructive",
         title: "Ошибка",
@@ -121,8 +113,6 @@ export function Chat() {
           </div>
         ))}
       </div>
-      
-      <Preview fileUrl={fileUrl} />
       
       <div className="p-4 border-t border-border">
         <div className="flex gap-2">
