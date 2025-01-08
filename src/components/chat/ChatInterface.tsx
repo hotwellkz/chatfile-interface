@@ -1,5 +1,4 @@
 import { useRef } from 'react';
-import type { Message, ProviderInfo } from '@/types';
 import { ModelSelector } from "./ModelSelector";
 import { ChatInput } from "./ChatInput";
 import { ChatMessages } from "./ChatMessages";
@@ -7,6 +6,8 @@ import { ChatControls } from "./ChatControls";
 import { FilePreview } from "../FilePreview";
 import { ExamplePrompts } from "./ExamplePrompts";
 import { APIKeyManager } from "./APIKeyManager";
+import { PROVIDER_LIST } from "@/utils/constants";
+import type { Message, ProviderInfo } from '@/types';
 
 interface ChatInterfaceProps {
   messages: Message[];
@@ -54,7 +55,7 @@ export function ChatInterface({
     input.accept = 'image/*';
     input.onchange = (e) => {
       const selectedFiles = Array.from((e.target as HTMLInputElement).files || []);
-      setFiles(prev => [...prev, ...selectedFiles]);
+      setFiles([...files, ...selectedFiles]);
     };
     input.click();
   };
@@ -91,7 +92,6 @@ export function ChatInterface({
 
         <div className="flex gap-2 mt-4">
           <ChatInput
-            ref={textareaRef}
             input={input}
             files={files}
             isLoading={isLoading}
@@ -108,7 +108,7 @@ export function ChatInterface({
 
         {!messages.length && (
           <ExamplePrompts 
-            handlePrompt={(e, prompt) => {
+            handlePrompt={(e: React.MouseEvent, prompt: string) => {
               setInput(prompt);
               onSendMessage();
             }} 
