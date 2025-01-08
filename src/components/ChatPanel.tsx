@@ -1,7 +1,7 @@
-import { Chat } from "./Chat";
+import { ChatProvider } from "./chat/ChatProvider";
 
 export const ChatPanel = () => {
   return (
-    <Chat />
+    <ChatProvider />
   );
 };
