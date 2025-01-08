@@ -26,14 +26,10 @@ export async function initWebContainer() {
  */
 export async function createFile(name: string, content: string) {
   try {
-    console.log('Creating file:', name, 'with content:', content);
-    
-    // Очищаем существующий экземпляр перед созданием нового файла
-    clearWebContainer();
-    
     const container = await initWebContainer();
+    console.log(`Creating file: ${name} with content: ${content}`);
     await container.fs.writeFile(name, content);
-    console.log('File created successfully');
+    console.log(`File ${name} created successfully.`);
   } catch (error) {
     console.error('Error creating file:', error);
     throw error;
