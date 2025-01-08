@@ -1,69 +1,50 @@
 import express from 'express';
 import cors from 'cors';
-import { OpenAI } from 'openai';
+import dotenv from 'dotenv';
 
-const router = express.Router();
+dotenv.config();
 
-router.use(cors({
-  origin: [
-    'https://bespoke-bavarois-8deceb.netlify.app',
-    'https://7db8c8ea-906e-471a-b06c-1e99127746c8.lovableproject.com',
-    'http://localhost:5173'
-  ],
-  methods: ['POST'],
-  credentials: true
-}));
+const app = express();
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-type Message = {
-  role: 'user' | 'assistant';
-  content: string;
-};
+app.use(cors());
+app.use(express.json());
 
 interface ChatRequest {
-  messages: Message[];
+  messages: Array<{
+    role: 'user' | 'assistant';
+    content: string;
+  }>;
 }
 
+interface ChatResponse {
+  content: string;
+  action?: 'create_file';
+  filename?: string;
+}
+
+// Создаем роутер
+const router = express.Router();
+
+// Обработчик POST запросов к /api/chat
 router.post('/chat', async (req: express.Request<{}, {}, ChatRequest>, res: express.Response) => {
   try {
     const { messages } = req.body;
 
-    if (!messages || !Array.isArray(messages)) {
-      return res.status(400).json({ error: 'Invalid messages format' });
-    }
+    // Здесь должна быть логика обработки чата
+    const response: ChatResponse = {
+      content: "Ответ от AI",
+      action: "create_file",
+      filename: "example.txt"
+    };
 
-    const lastMessage = messages[messages.length - 1];
-    
-    if (lastMessage.content.toLowerCase().includes('создай файл')) {
-      return res.json({
-        role: 'assistant',
-        content: 'Файл test.txt создан.',
-        action: 'create_file',
-        filename: 'test.txt',
-        fileContent: 'Привет, мир!'
-      });
-    }
-
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: messages.map(msg => ({
-        role: msg.role,
-        content: msg.content
-      }))
-    });
-
-    return res.json({ 
-      role: 'assistant',
-      content: completion.choices[0].message.content
-    });
-    
+    return res.json(response);
   } catch (error) {
-    console.error('Error in chat endpoint:', error);
+    console.error('Error processing chat request:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-export { router };
+// Подключаем роутер к приложению
+app.use('/api', router);
+
+export default app;
