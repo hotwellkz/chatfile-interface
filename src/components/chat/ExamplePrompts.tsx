@@ -6,9 +6,11 @@ const EXAMPLE_PROMPTS = [
   "Как использовать TypeScript?"
 ];
 
-export const ExamplePrompts = (
-  handlePrompt: (event: React.MouseEvent, prompt: string) => void
-) => {
+interface ExamplePromptsProps {
+  handlePrompt: (event: React.MouseEvent, prompt: string) => void;
+}
+
+export const ExamplePrompts = ({ handlePrompt }: ExamplePromptsProps) => {
   return (
     <div className="max-w-chat mx-auto mb-6">
       <h3 className="text-sm font-medium mb-2 text-center">Примеры запросов</h3>
