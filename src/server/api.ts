@@ -6,6 +6,12 @@ dotenv.config();
 
 const router = express.Router();
 
+// Проверяем наличие API ключа
+if (!process.env.OPENAI_API_KEY) {
+  console.error('OPENAI_API_KEY не найден в переменных окружения');
+  process.exit(1);
+}
+
 // Инициализация OpenAI с API ключом
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -22,6 +28,12 @@ router.post('/chat', async (req: express.Request<{}, {}, ChatRequest>, res: expr
   try {
     const { messages } = req.body;
 
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ error: 'Неверный формат сообщений' });
+    }
+
+    console.log('Отправка запроса к OpenAI:', messages);
+
     // Отправляем запрос к OpenAI API
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -33,6 +45,8 @@ router.post('/chat', async (req: express.Request<{}, {}, ChatRequest>, res: expr
     // Получаем ответ от OpenAI
     const aiResponse = completion.choices[0].message;
 
+    console.log('Получен ответ от OpenAI:', aiResponse);
+
     // Формируем ответ с дополнительными действиями
     const response = {
       content: aiResponse.content,
@@ -42,8 +56,11 @@ router.post('/chat', async (req: express.Request<{}, {}, ChatRequest>, res: expr
 
     res.json(response);
   } catch (error) {
-    console.error('Error processing chat request:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Ошибка при обработке запроса чата:', error);
+    res.status(500).json({ 
+      error: 'Внутренняя ошибка сервера',
+      details: error instanceof Error ? error.message : 'Неизвестная ошибка'
+    });
   }
 });
 
