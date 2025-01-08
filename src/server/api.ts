@@ -1,26 +1,10 @@
 import express from 'express';
-import cors from 'cors';
+import { OpenAI } from 'openai';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 const router = express.Router();
-
-router.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-}));
-
-router.use((req, res, next) => {
-  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-  res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
-  res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
-  next();
-});
-
-router.use(express.json());
 
 interface ChatRequest {
   messages: Array<{
@@ -32,9 +16,11 @@ interface ChatRequest {
 router.post('/chat', async (req: express.Request<{}, {}, ChatRequest>, res: express.Response) => {
   try {
     const { messages } = req.body;
-
+    
+    // Здесь можно добавить интеграцию с OpenAI
+    // Пока возвращаем тестовый ответ
     const response = {
-      content: "Ответ от AI",
+      content: "Тестовый ответ от сервера",
       action: "create_file",
       filename: "example.txt"
     };
