@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Send, Paperclip } from "lucide-react";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
@@ -20,34 +20,6 @@ interface Message {
   content: string;
 }
 
-interface BaseChatProps {
-  textareaRef?: React.RefObject<HTMLTextAreaElement> | undefined;
-  messageRef?: RefCallback<HTMLDivElement> | undefined;
-  scrollRef?: RefCallback<HTMLDivElement> | undefined;
-  showChat?: boolean;
-  chatStarted?: boolean;
-  isStreaming?: boolean;
-  messages?: Message[];
-  description?: string;
-  enhancingPrompt?: boolean;
-  promptEnhanced?: boolean;
-  input?: string;
-  model?: string;
-  setModel?: (model: string) => void;
-  provider?: ProviderInfo;
-  setProvider?: (provider: ProviderInfo) => void;
-  handleStop?: () => void;
-  sendMessage?: (event: React.UIEvent, messageInput?: string) => void;
-  handleInputChange?: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  enhancePrompt?: () => void;
-  importChat?: (description: string, messages: Message[]) => Promise<void>;
-  exportChat?: () => void;
-  uploadedFiles?: File[];
-  setUploadedFiles?: (files: File[]) => void;
-  imageDataList?: string[];
-  setImageDataList?: (dataList: string[]) => void;
-}
-
 export function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -60,7 +32,11 @@ export function Chat() {
   const [modelList, setModelList] = useState(MODEL_LIST);
   const [isModelSettingsCollapsed, setIsModelSettingsCollapsed] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const [recognition, setRecognition] = useState<any>(null);
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(event.target.value);
+  };
 
   useEffect(() => {
     const storedApiKeys = Cookies.get('apiKeys');
@@ -229,7 +205,7 @@ export function Chat() {
           <div className="flex-1">
             <Textarea
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={handleInputChange}
               onKeyDown={handleKeyPress}
               onPaste={handlePaste}
               onDrop={handleDrop}

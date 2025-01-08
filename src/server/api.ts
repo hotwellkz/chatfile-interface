@@ -23,18 +23,14 @@ router.post('/chat', async (req: express.Request, res: express.Response) => {
       return res.status(400).json({ error: 'Неверный формат сообщений' });
     }
 
-    console.log('Отправка запроса к OpenAI:', { messages, model, files });
-
     const completion = await openai.chat.completions.create({
-      model: model || "gpt-4o",
+      model: model || "gpt-4",
       messages: messages,
       temperature: 0.7,
       max_tokens: 1000,
     });
 
     const aiResponse = completion.choices[0].message;
-
-    console.log('Получен ответ от OpenAI:', aiResponse);
 
     res.json({
       content: aiResponse.content,
