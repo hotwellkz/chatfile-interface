@@ -1,11 +1,14 @@
-import { useState, useEffect } from 'react';
-import { Send, Paperclip, Mic, MicOff } from "lucide-react";
+import { useState } from 'react';
+import { Send, Paperclip, Mic } from "lucide-react";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { ModelSelector } from "./ModelSelector";
-import { FileUpload } from "./FileUpload";
+import { FilePreview } from "./FilePreview";
 import { SpeechRecognition } from "./SpeechRecognition";
+
+const TEXTAREA_MIN_HEIGHT = 150;
+const TEXTAREA_MAX_HEIGHT = 400;
 
 type Message = {
   role: 'user' | 'assistant';
@@ -106,6 +109,12 @@ export function Chat() {
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
+    e.currentTarget.style.border = '2px solid var(--primary)';
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.currentTarget.style.border = '1px solid var(--border)';
   };
 
   return (
@@ -128,6 +137,11 @@ export function Chat() {
       <div className="p-4 border-t border-border">
         <ModelSelector model={model} setModel={setModel} />
         
+        <FilePreview 
+          files={files} 
+          onRemove={(index) => setFiles(files.filter((_, i) => i !== index))} 
+        />
+        
         <div className="flex gap-2 mt-4">
           <div className="flex-1">
             <Textarea
@@ -137,8 +151,13 @@ export function Chat() {
               onPaste={handlePaste}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
               placeholder="Введите сообщение..."
-              className="min-h-[150px] resize-none"
+              style={{
+                minHeight: TEXTAREA_MIN_HEIGHT,
+                maxHeight: TEXTAREA_MAX_HEIGHT
+              }}
+              className="resize-none transition-all duration-200 hover:border-primary"
               disabled={isLoading}
             />
           </div>
@@ -154,46 +173,27 @@ export function Chat() {
               variant="outline"
               size="icon"
               onClick={() => {
-                const fileInput = document.querySelector('input[type="file"]');
-                if (fileInput instanceof HTMLInputElement) {
-                  fileInput.click();
-                }
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.multiple = true;
+                input.accept = 'image/*';
+                input.onchange = (e) => {
+                  const selectedFiles = Array.from((e.target as HTMLInputElement).files || []);
+                  setFiles(prev => [...prev, ...selectedFiles]);
+                };
+                input.click();
               }}
               className="hover:bg-accent"
             >
               <Paperclip className="h-4 w-4" />
-              <input
-                type="file"
-                multiple
-                className="hidden"
-                onChange={(e) => {
-                  const selectedFiles = Array.from(e.target.files || []);
-                  setFiles(prev => [...prev, ...selectedFiles]);
-                }}
-              />
             </Button>
             <SpeechRecognition onTranscript={handleSpeechTranscript} />
           </div>
         </div>
 
-        {files.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-2">
-            {files.map((file, index) => (
-              <div 
-                key={index}
-                className="flex items-center gap-2 bg-secondary p-2 rounded"
-              >
-                <span className="text-sm">{file.name}</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setFiles(files.filter((_, i) => i !== index))}
-                >
-                  <span className="sr-only">Удалить файл</span>
-                  ×
-                </Button>
-              </div>
-            ))}
+        {input.length > 3 && (
+          <div className="mt-2 text-xs text-muted-foreground text-right">
+            Нажмите Shift + Enter для новой строки
           </div>
         )}
       </div>
