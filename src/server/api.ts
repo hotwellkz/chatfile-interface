@@ -35,10 +35,8 @@ router.post('/chat', async (req: express.Request<{}, {}, ChatRequest>, res: expr
       return res.status(400).json({ error: 'Invalid messages format' });
     }
 
-    // Получаем последнее сообщение пользователя
     const lastMessage = messages[messages.length - 1];
     
-    // Проверяем, запрашивает ли пользователь создание файла
     if (lastMessage.content.toLowerCase().includes('создай файл')) {
       return res.json({
         role: 'assistant',
@@ -49,7 +47,6 @@ router.post('/chat', async (req: express.Request<{}, {}, ChatRequest>, res: expr
       });
     }
 
-    // Если это не запрос на создание файла, используем OpenAI
     const completion = await openai.chat.completions.create({
       model: "gpt-4",
       messages: messages.map(msg => ({
