@@ -1,7 +1,7 @@
 import express from 'express';
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
-import { MAX_TOKENS, CONTINUE_PROMPT } from '../utils/constants.js';
+import { MAX_TOKENS, CONTINUE_PROMPT } from '../utils/constants';
 import type { Message } from '../types';
 
 dotenv.config();
