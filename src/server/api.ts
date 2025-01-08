@@ -4,10 +4,26 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const app = express();
+// Создаем роутер
+const router = express.Router();
 
-app.use(cors());
-app.use(express.json());
+// Настраиваем CORS с необходимыми заголовками
+router.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+}));
+
+// Добавляем middleware для установки заголовков безопасности
+router.use((req, res, next) => {
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+  res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
+  next();
+});
+
+router.use(express.json());
 
 interface ChatRequest {
   messages: Array<{
@@ -21,9 +37,6 @@ interface ChatResponse {
   action?: 'create_file';
   filename?: string;
 }
-
-// Создаем роутер
-const router = express.Router();
 
 // Обработчик POST запросов к /api/chat
 router.post('/chat', async (req: express.Request<{}, {}, ChatRequest>, res: express.Response) => {
@@ -44,7 +57,4 @@ router.post('/chat', async (req: express.Request<{}, {}, ChatRequest>, res: expr
   }
 });
 
-// Подключаем роутер к приложению
-app.use('/api', router);
-
-export default app;
+export { router };
