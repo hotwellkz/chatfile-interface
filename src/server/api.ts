@@ -1,7 +1,9 @@
 import express from 'express';
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
-import { MAX_TOKENS, CONTINUE_PROMPT } from '../utils/constants';
+import { MAX_TOKENS, CONTINUE_PROMPT } from '../utils/constants.js';
+import { streamText } from '../lib/stream-text.js';
+import type { Messages, StreamingOptions } from '../types/index.js';
 
 dotenv.config();
 
@@ -31,12 +33,6 @@ function parseCookies(cookieHeader: string) {
   return cookies;
 }
 
-// Handle CORS preflight requests
-router.options('/chat', (_req, res) => {
-  res.writeHead(200, corsHeaders);
-  res.end();
-});
-
 router.post('/chat', async (req: express.Request, res: express.Response) => {
   try {
     const { messages, model } = req.body;
@@ -51,64 +47,41 @@ router.post('/chat', async (req: express.Request, res: express.Response) => {
       apiKey: apiKeys.openai || process.env.OPENAI_API_KEY,
     });
 
-    // Set up SSE
-    res.writeHead(200, corsHeaders);
-
-    const stream = await openai.chat.completions.create({
+    const response = await openai.chat.completions.create({
       model: model || "gpt-4",
       messages: messages,
       stream: true,
       max_tokens: MAX_TOKENS,
     });
 
-    let accumulatedContent = '';
+    // Set up SSE headers
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive'
+    });
 
-    for await (const chunk of stream) {
+    for await (const chunk of response) {
       const content = chunk.choices[0]?.delta?.content || '';
-      accumulatedContent += content;
-      
       if (content) {
         res.write(`data: ${JSON.stringify({ content })}\n\n`);
-      }
-
-      // If we hit the token limit, continue the generation
-      if (chunk.choices[0]?.finish_reason === 'length') {
-        const continuationMessages = [
-          ...messages,
-          { role: 'assistant', content: accumulatedContent },
-          { role: 'user', content: CONTINUE_PROMPT }
-        ];
-
-        const continuationStream = await openai.chat.completions.create({
-          model: model || "gpt-4",
-          messages: continuationMessages,
-          stream: true,
-          max_tokens: MAX_TOKENS,
-        });
-
-        for await (const continuationChunk of continuationStream) {
-          const continuationContent = continuationChunk.choices[0]?.delta?.content || '';
-          if (continuationContent) {
-            res.write(`data: ${JSON.stringify({ content: continuationContent })}\n\n`);
-          }
-        }
       }
     }
 
     res.write('data: [DONE]\n\n');
     res.end();
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Ошибка при обработке запроса чата:', error);
     
-    if (error instanceof Error && error.message.includes('API key')) {
+    if (error.message?.includes('API key')) {
       return res.status(401).json({ 
         error: 'Неверный или отсутствующий API ключ',
         details: error.message
       });
     }
 
-    res.status(500).json({ 
+    return res.status(500).json({ 
       error: 'Внутренняя ошибка сервера',
       details: error instanceof Error ? error.message : 'Неизвестная ошибка'
     });

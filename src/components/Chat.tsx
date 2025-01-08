@@ -125,7 +125,11 @@ export function Chat() {
       <ChatHeader
         model={model}
         setModel={setModel}
-        provider={{ name: 'openai', label: 'OpenAI' }}
+        provider={{ 
+          name: 'openai', 
+          label: 'OpenAI',
+          models: initializeModelList() // Добавляем models из constants
+        }}
         apiKey={apiKeys['openai'] || ''}
         onApiKeyChange={(key) => {
           setApiKeys(prev => ({ ...prev, openai: key }));
