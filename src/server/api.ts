@@ -47,14 +47,14 @@ router.post('/chat', async (req: express.Request<{}, {}, ChatRequest>, res: expr
       }))
     });
 
-    res.json({ 
+    return res.json({ 
       role: 'assistant',
       content: completion.choices[0].message.content
     });
     
   } catch (error) {
     console.error('Error in chat endpoint:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
