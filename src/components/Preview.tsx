@@ -1,7 +1,12 @@
+import React from 'react';
 import { Maximize2, Smartphone, RefreshCw } from "lucide-react";
 import { Button } from "./ui/button";
 
-export const PreviewPanel = () => {
+interface PreviewProps {
+  fileUrl?: string;
+}
+
+const Preview = ({ fileUrl }: PreviewProps) => {
   return (
     <div className="flex flex-col h-full">
       <div className="p-2 border-b border-border flex items-center justify-between">
@@ -22,8 +27,20 @@ export const PreviewPanel = () => {
       </div>
       
       <div className="flex-1 bg-background">
-        {/* Preview iframe would go here */}
+        {!fileUrl ? (
+          <div className="flex items-center justify-center h-full text-muted-foreground">
+            No preview available
+          </div>
+        ) : (
+          <iframe 
+            src={fileUrl} 
+            className="w-full h-[400px]" 
+            title="Preview"
+          />
+        )}
       </div>
     </div>
   );
 };
+
+export default Preview;

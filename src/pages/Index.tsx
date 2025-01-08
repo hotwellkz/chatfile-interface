@@ -1,7 +1,7 @@
 import { Header } from "@/components/Header";
 import { ChatPanel } from "@/components/ChatPanel";
 import { FileExplorer } from "@/components/FileExplorer";
-import { Preview } from "@/components/Preview";
+import Preview from "@/components/Preview";
 import { useState } from "react";
 
 const Index = () => {
