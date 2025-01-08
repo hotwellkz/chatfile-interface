@@ -1,27 +1,23 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import apiRouter from './api';
+import apiRouter from './api.js';
 
 dotenv.config();
 
 const app = express();
 
+// Настройка CORS для разрешения запросов с любого домена
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? process.env.FRONTEND_URL : '*',
+  origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+// Парсинг JSON в теле запроса
 app.use(express.json());
 
-// Добавляем базовый маршрут для проверки работы сервера
-app.get('/', (req, res) => {
-  res.json({ status: 'API is running' });
-});
-
-// Монтируем API роуты
+// Подключаем маршруты API
 app.use('/api', apiRouter);
 
 const PORT = process.env.PORT || 3001;

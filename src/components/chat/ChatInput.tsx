@@ -1,12 +1,18 @@
 import { Textarea } from "../ui/textarea";
 import { FilePreview } from "../FilePreview";
 
-export interface ChatInputProps {
+interface ChatInputProps {
   input: string;
   files: File[];
   isLoading: boolean;
   onInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  onSend: () => Promise<void>;
+  onKeyPress: (e: React.KeyboardEvent) => void;
+  onPaste: (e: React.ClipboardEvent) => void;
+  onDrop: (e: React.DragEvent) => void;
+  onDragEnter: (e: React.DragEvent<HTMLTextAreaElement>) => void;
+  onDragOver: (e: React.DragEvent<HTMLTextAreaElement>) => void;
+  onDragLeave: (e: React.DragEvent<HTMLTextAreaElement>) => void;
+  onRemoveFile: (index: number) => void;
 }
 
 export const ChatInput = ({
@@ -14,19 +20,25 @@ export const ChatInput = ({
   files,
   isLoading,
   onInputChange,
-  onSend
+  onKeyPress,
+  onPaste,
+  onDrop,
+  onDragEnter,
+  onDragOver,
+  onDragLeave,
+  onRemoveFile,
 }: ChatInputProps) => {
   return (
     <div className="flex-1">
       <Textarea
         value={input}
         onChange={onInputChange}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            onSend();
-          }
-        }}
+        onKeyDown={onKeyPress}
+        onPaste={onPaste}
+        onDrop={onDrop}
+        onDragEnter={onDragEnter}
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
         placeholder="Введите сообщение..."
         style={{
           minHeight: 150,
@@ -37,11 +49,7 @@ export const ChatInput = ({
       />
       <FilePreview
         files={files}
-        onRemove={(index) => {
-          const newFiles = [...files];
-          newFiles.splice(index, 1);
-          // setFiles(newFiles);
-        }}
+        onRemove={onRemoveFile}
       />
     </div>
   );

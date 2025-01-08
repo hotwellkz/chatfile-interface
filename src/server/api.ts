@@ -31,7 +31,7 @@ function parseCookies(cookieHeader: string) {
   return cookies;
 }
 
-router.post('/chat', async (req, res) => {
+router.post('/chat', async (req: express.Request, res: express.Response) => {
   try {
     const { messages, model } = req.body;
     const cookieHeader = req.headers.cookie;
