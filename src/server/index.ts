@@ -1,6 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import apiRouter from './routes/api'; // Импортируем без расширения файла
+import apiRouter from './routes/api.js';
 
 dotenv.config();
 
