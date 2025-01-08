@@ -1,19 +1,73 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Send } from "lucide-react";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { createFile, initWebContainer, destroyWebContainer } from "@/lib/fileSystem";
 
 type Message = {
   role: 'user' | 'assistant';
   content: string;
 };
 
+type AIResponse = {
+  content: string;
+  action?: 'create_file';
+  filename?: string;
+};
+
 export function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [fileUrl, setFileUrl] = useState<string>('');
   const { toast } = useToast();
+
+  // Инициализируем WebContainer один раз при монтировании компонента
+  useEffect(() => {
+    const initContainer = async () => {
+      try {
+        await initWebContainer();
+        console.log('WebContainer initialized successfully in Chat component');
+      } catch (error) {
+        console.error('Failed to initialize WebContainer in Chat component:', error);
+        toast({
+          variant: "destructive",
+          title: "Ошибка инициализации",
+          description: "Не удалось инициализировать WebContainer"
+        });
+      }
+    };
+
+    initContainer();
+
+    // Очищаем WebContainer при размонтировании компонента
+    return () => {
+      destroyWebContainer().catch(error => {
+        console.error('Error destroying WebContainer:', error);
+      });
+    };
+  }, []);
+
+  const handleAIResponse = async (data: AIResponse) => {
+    if (data.action === 'create_file' && data.filename) {
+      try {
+        await createFile(data.filename, data.content);
+        const url = `webcontainer://${data.filename}`;
+        setFileUrl(url);
+        toast({
+          title: "Файл создан",
+          description: `Создан файл ${data.filename}`
+        });
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Ошибка",
+          description: "Не удалось создать файл"
+        });
+      }
+    }
+  };
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -39,7 +93,7 @@ export function Chat() {
         throw new Error('Ошибка сервера');
       }
 
-      const data = await response.json();
+      const data: AIResponse = await response.json();
       const aiMessage: Message = {
         role: 'assistant',
         content: data.content
@@ -47,6 +101,8 @@ export function Chat() {
       
       setMessages(prev => [...prev, aiMessage]);
       setInput('');
+      
+      await handleAIResponse(data);
       
     } catch (error) {
       toast({

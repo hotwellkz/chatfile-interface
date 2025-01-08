@@ -1,5 +1,5 @@
 import express from 'express';
-import { router } from './api';
+import { router } from './api.js';
 import dotenv from 'dotenv';
 
 // Загружаем переменные окружения
