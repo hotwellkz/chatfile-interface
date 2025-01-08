@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, RefCallback } from 'react';
 import { Send, Paperclip, Mic } from "lucide-react";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
@@ -6,14 +6,46 @@ import { useToast } from "@/hooks/use-toast";
 import { ModelSelector } from "./ModelSelector";
 import { FilePreview } from "./FilePreview";
 import { SpeechRecognition } from "./SpeechRecognition";
+import Cookies from 'js-cookie';
+import { initializeModelList, MODEL_LIST, PROVIDER_LIST } from '~/utils/constants';
+import { APIKeyManager } from './APIKeyManager';
+import { ExamplePrompts } from './ExamplePrompts';
 
 const TEXTAREA_MIN_HEIGHT = 150;
 const TEXTAREA_MAX_HEIGHT = 400;
 
-type Message = {
+interface Message {
   role: 'user' | 'assistant';
   content: string;
-};
+}
+
+interface BaseChatProps {
+  textareaRef?: React.RefObject<HTMLTextAreaElement> | undefined;
+  messageRef?: RefCallback<HTMLDivElement> | undefined;
+  scrollRef?: RefCallback<HTMLDivElement> | undefined;
+  showChat?: boolean;
+  chatStarted?: boolean;
+  isStreaming?: boolean;
+  messages?: Message[];
+  description?: string;
+  enhancingPrompt?: boolean;
+  promptEnhanced?: boolean;
+  input?: string;
+  model?: string;
+  setModel?: (model: string) => void;
+  provider?: ProviderInfo;
+  setProvider?: (provider: ProviderInfo) => void;
+  handleStop?: () => void;
+  sendMessage?: (event: React.UIEvent, messageInput?: string) => void;
+  handleInputChange?: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  enhancePrompt?: () => void;
+  importChat?: (description: string, messages: Message[]) => Promise<void>;
+  exportChat?: () => void;
+  uploadedFiles?: File[];
+  setUploadedFiles?: (files: File[]) => void;
+  imageDataList?: string[];
+  setImageDataList?: (dataList: string[]) => void;
+}
 
 export function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -23,23 +55,68 @@ export function Chat() {
   const [files, setFiles] = useState<File[]>([]);
   const [transcript, setTranscript] = useState('');
   const { toast } = useToast();
+  const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
+  const [modelList, setModelList] = useState(MODEL_LIST);
+  const [isModelSettingsCollapsed, setIsModelSettingsCollapsed] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+
+  useEffect(() => {
+    const storedApiKeys = Cookies.get('apiKeys');
+    if (storedApiKeys) {
+      const parsedKeys = JSON.parse(storedApiKeys);
+      if (typeof parsedKeys === 'object' && parsedKeys !== null) {
+        setApiKeys(parsedKeys);
+      }
+    }
+    initializeModelList().then((modelList) => {
+      setModelList(modelList);
+    });
+    if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+
+      recognition.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map((result) => result[0])
+          .map((result) => result.transcript)
+          .join('');
+        setTranscript(transcript);
+        if (handleInputChange) {
+          const syntheticEvent = {
+            target: { value: transcript },
+          } as React.ChangeEvent<HTMLTextAreaElement>;
+          handleInputChange(syntheticEvent);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+
+      setRecognition(recognition);
+    }
+  }, []);
 
   const sendMessage = async () => {
     if (!input.trim() && files.length === 0) return;
-    
+
     const userMessage: Message = {
       role: 'user',
       content: input
     };
-    
+
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
-    
+
     try {
       const response = await fetch('https://backend007.onrender.com/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           messages: [...messages, userMessage],
           model,
           files: files.map(f => f.name)
@@ -55,11 +132,11 @@ export function Chat() {
         role: 'assistant',
         content: data.content
       };
-      
+
       setMessages(prev => [...prev, aiMessage]);
       setInput('');
       setFiles([]);
-      
+
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -107,14 +184,19 @@ export function Chat() {
     setFiles(prev => [...prev, ...imageFiles]);
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragEnter = (e: React.DragEvent<HTMLTextAreaElement>) => {
     e.preventDefault();
-    e.currentTarget.style.border = '2px solid var(--primary)';
+    (e.target as HTMLTextAreaElement).style.border = '2px solid #1488fc';
   };
 
-  const handleDragLeave = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent<HTMLTextAreaElement>) => {
     e.preventDefault();
-    e.currentTarget.style.border = '1px solid var(--border)';
+    (e.target as HTMLTextAreaElement).style.border = '2px solid #1488fc';
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLTextAreaElement>) => {
+    e.preventDefault();
+    (e.target as HTMLTextAreaElement).style.border = '1px solid var(--border)';
   };
 
   return (
@@ -124,8 +206,8 @@ export function Chat() {
           <div
             key={idx}
             className={`p-3 rounded-lg ${
-              msg.role === 'user' 
-                ? 'bg-primary text-primary-foreground ml-auto' 
+              msg.role === 'user'
+                ? 'bg-primary text-primary-foreground ml-auto'
                 : 'bg-muted'
             } max-w-[80%]`}
           >
@@ -133,15 +215,15 @@ export function Chat() {
           </div>
         ))}
       </div>
-      
+
       <div className="p-4 border-t border-border">
         <ModelSelector model={model} setModel={setModel} />
-        
-        <FilePreview 
-          files={files} 
-          onRemove={(index) => setFiles(files.filter((_, i) => i !== index))} 
+
+        <FilePreview
+          files={files}
+          onRemove={(index) => setFiles(files.filter((_, i) => i !== index))}
         />
-        
+
         <div className="flex gap-2 mt-4">
           <div className="flex-1">
             <Textarea
@@ -150,6 +232,7 @@ export function Chat() {
               onKeyDown={handleKeyPress}
               onPaste={handlePaste}
               onDrop={handleDrop}
+              onDragEnter={handleDragEnter}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               placeholder="Введите сообщение..."
@@ -162,7 +245,7 @@ export function Chat() {
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Button 
+            <Button
               size="icon"
               onClick={sendMessage}
               disabled={isLoading}
