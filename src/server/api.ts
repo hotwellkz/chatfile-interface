@@ -7,6 +7,7 @@ const router = express.Router();
 // Настраиваем CORS для разрешенных доменов
 router.use(cors({
   origin: [
+    'https://bespoke-bavarois-8deceb.netlify.app',
     'https://7db8c8ea-906e-471a-b06c-1e99127746c8.lovableproject.com',
     'http://localhost:5173' // для локальной разработки
   ],
@@ -46,14 +47,14 @@ router.post('/chat', async (req: express.Request<{}, {}, ChatRequest>, res: expr
       }))
     });
 
-    res.json({ 
+    return res.json({ 
       role: 'assistant',
       content: completion.choices[0].message.content
     });
     
   } catch (error) {
     console.error('Error in chat endpoint:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
