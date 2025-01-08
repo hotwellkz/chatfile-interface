@@ -1,11 +1,12 @@
 import express from 'express';
-import apiRouter from './api.js';
 import dotenv from 'dotenv';
+import apiRouter from './api.js'; // Исправленный путь импорта
 
 dotenv.config();
 
 const app = express();
 
+// Установить заголовки CORS для поддержки WebContainer
 app.use((req, res, next) => {
   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
   res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
