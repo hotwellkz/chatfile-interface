@@ -19,38 +19,43 @@ const openai = new OpenAI({
 
 // Определяем интерфейс для тела запроса
 interface ChatRequest {
-  prompt: string;
+  messages: Array<{
+    role: 'user' | 'assistant';
+    content: string;
+  }>;
 }
 
 router.post('/chat', async (req: express.Request, res: express.Response) => {
   try {
-    const { prompt } = req.body as ChatRequest;
+    const { messages } = req.body as ChatRequest;
 
-    if (!prompt) {
-      return res.status(400).json({ error: 'Отсутствует поле prompt' });
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ error: 'Неверный формат сообщений' });
     }
 
-    console.log('Отправка запроса к OpenAI:', prompt);
+    console.log('Отправка запроса к OpenAI:', messages);
 
     // Отправляем запрос к OpenAI API
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }],
+      model: "gpt-4",
+      messages: messages,
       temperature: 0.7,
       max_tokens: 1000,
     });
 
     // Получаем ответ от OpenAI
-    const answer = completion.choices[0].message.content;
+    const aiResponse = completion.choices[0].message;
 
-    console.log('Получен ответ от OpenAI:', answer);
+    console.log('Получен ответ от OpenAI:', aiResponse);
 
-    // Формируем ответ
-    res.json({ 
-      answer,
+    // Формируем ответ с дополнительными действиями
+    const response = {
+      content: aiResponse.content,
       action: "create_file",
       filename: "example.txt"
-    });
+    };
+
+    res.json(response);
 
   } catch (error) {
     console.error('Ошибка при обработке запроса чата:', error);
