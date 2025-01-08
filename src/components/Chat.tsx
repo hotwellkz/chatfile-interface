@@ -106,7 +106,7 @@ export function Chat() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
               placeholder="Введите сообщение..."
-              className="min-h-[60px] resize-none"
+              className="min-h-[150px] resize-none" // Увеличили высоту в 2.5 раза (было 60px)
               disabled={isLoading}
             />
           </div>
@@ -121,7 +121,12 @@ export function Chat() {
             <Button
               variant="outline"
               size="icon"
-              onClick={() => document.querySelector('input[type="file"]')?.click()}
+              onClick={() => {
+                const fileInput = document.querySelector('input[type="file"]');
+                if (fileInput instanceof HTMLInputElement) {
+                  fileInput.click();
+                }
+              }}
               className="hover:bg-accent"
             >
               <Paperclip className="h-4 w-4" />
