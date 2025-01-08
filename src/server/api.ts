@@ -45,12 +45,10 @@ router.post('/chat', async (req: express.Request, res: express.Response) => {
 
     console.log('Получен ответ от OpenAI:', aiResponse);
 
-    const response = {
+    res.json({
       content: aiResponse.content,
       files: files
-    };
-
-    res.json(response);
+    });
 
   } catch (error) {
     console.error('Ошибка при обработке запроса чата:', error);
