@@ -163,12 +163,10 @@ export function Chat() {
           />
         </div>
 
-        {!messages.length && (
-          <ExamplePrompts handlePrompt={(e, prompt) => {
-            setInput(prompt);
-            sendMessage();
-          }} />
-        )}
+        {!messages.length && <ExamplePrompts handlePrompt={(e, prompt) => {
+          setInput(prompt);
+          sendMessage();
+        }} />}
       </div>
     </div>
   );
