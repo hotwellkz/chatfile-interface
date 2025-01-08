@@ -18,6 +18,7 @@ export function Chat() {
   const [isLoading, setIsLoading] = useState(false);
   const [model, setModel] = useState('gpt-4');
   const [files, setFiles] = useState<File[]>([]);
+  const [transcript, setTranscript] = useState('');
   const { toast } = useToast();
 
   const sendMessage = async () => {
@@ -77,6 +78,34 @@ export function Chat() {
 
   const handleSpeechTranscript = (text: string) => {
     setInput(text);
+    setTranscript(text);
+  };
+
+  const handlePaste = async (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (file) {
+          setFiles(prev => [...prev, file]);
+        }
+        break;
+      }
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    const imageFiles = droppedFiles.filter(file => file.type.startsWith('image/'));
+    setFiles(prev => [...prev, ...imageFiles]);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
   };
 
   return (
@@ -105,6 +134,9 @@ export function Chat() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
+              onPaste={handlePaste}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
               placeholder="Введите сообщение..."
               className="min-h-[150px] resize-none"
               disabled={isLoading}
