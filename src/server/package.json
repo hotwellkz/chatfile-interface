@@ -2,14 +2,14 @@
   "name": "chatfile-interface-server",
   "version": "1.0.0",
   "description": "Backend server for chatfile interface",
-  "main": "dist/index.js",
+  "main": "dist/server/index.js",
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "node ../../dist/server/index.js",
     "dev": "ts-node --esm index.ts",
     "watch": "tsc -w",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf ../../dist/server"
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -18,7 +18,7 @@
     "dotenv": "^16.4.1"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.17",
+    "@types/cors": "^2.8.17", 
     "@types/express": "^4.17.21",
     "@types/node": "^20.11.19",
     "typescript": "^5.3.3",
