@@ -1,60 +1,64 @@
 import express from 'express';
-import cors from 'cors';
+import OpenAI from 'openai';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Создаем роутер
 const router = express.Router();
 
-// Настраиваем CORS с необходимыми заголовками
-router.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-}));
+if (!process.env.OPENAI_API_KEY) {
+  console.error('OPENAI_API_KEY не найден в переменных окружения');
+  process.exit(1);
+}
 
-// Добавляем middleware для установки заголовков безопасности
-router.use((req, res, next) => {
-  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-  res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
-  res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
-  next();
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
 });
-
-router.use(express.json());
 
 interface ChatRequest {
   messages: Array<{
     role: 'user' | 'assistant';
     content: string;
   }>;
+  model: string;
+  files?: string[];
 }
 
-interface ChatResponse {
-  content: string;
-  action?: 'create_file';
-  filename?: string;
-}
-
-// Обработчик POST запросов к /api/chat
-router.post('/chat', async (req: express.Request<{}, {}, ChatRequest>, res: express.Response) => {
+router.post('/chat', async (req: express.Request, res: express.Response) => {
   try {
-    const { messages } = req.body;
+    const { messages, model, files } = req.body as ChatRequest;
 
-    // Здесь должна быть логика обработки чата
-    const response: ChatResponse = {
-      content: "Ответ от AI",
-      action: "create_file",
-      filename: "example.txt"
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ error: 'Неверный формат сообщений' });
+    }
+
+    console.log('Отправка запроса к OpenAI:', { messages, model, files });
+
+    const completion = await openai.chat.completions.create({
+      model: model || "gpt-4",
+      messages: messages,
+      temperature: 0.7,
+      max_tokens: 1000,
+    });
+
+    const aiResponse = completion.choices[0].message;
+
+    console.log('Получен ответ от OpenAI:', aiResponse);
+
+    const response = {
+      content: aiResponse.content,
+      files: files
     };
 
-    return res.json(response);
+    res.json(response);
+
   } catch (error) {
-    console.error('Error processing chat request:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error('Ошибка при обработке запроса чата:', error);
+    res.status(500).json({ 
+      error: 'Внутренняя ошибка сервера',
+      details: error instanceof Error ? error.message : 'Неизвестная ошибка'
+    });
   }
 });
 
-export { router };
+export default router;

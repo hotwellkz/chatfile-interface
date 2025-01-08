@@ -1,87 +1,27 @@
 import { useState, useEffect } from 'react';
-import { Send } from "lucide-react";
+import { Send, Paperclip, Mic, MicOff } from "lucide-react";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { createFile, initWebContainer, destroyWebContainer } from "@/lib/fileSystem";
+import { ModelSelector } from "./ModelSelector";
+import { FileUpload } from "./FileUpload";
+import { SpeechRecognition } from "./SpeechRecognition";
 
 type Message = {
   role: 'user' | 'assistant';
   content: string;
 };
 
-type AIResponse = {
-  content: string;
-  action?: 'create_file';
-  filename?: string;
-};
-
 export function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [fileUrl, setFileUrl] = useState<string>('');
+  const [model, setModel] = useState('gpt-4');
+  const [files, setFiles] = useState<File[]>([]);
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      console.warn('WebContainer is not supported in server-side environment.');
-      return;
-    }
-
-    let isMounted = true;
-
-    const initContainer = async () => {
-      try {
-        await initWebContainer();
-        if (isMounted) {
-          console.log('WebContainer initialized successfully in Chat component');
-        }
-      } catch (error) {
-        if (isMounted) {
-          console.error('Failed to initialize WebContainer in Chat component:', error);
-          toast({
-            variant: "destructive",
-            title: "Ошибка инициализации",
-            description: "Не удалось инициализировать WebContainer. Проверьте консоль для деталей."
-          });
-        }
-      }
-    };
-
-    initContainer();
-
-    return () => {
-      isMounted = false;
-      destroyWebContainer().catch(error => {
-        console.error('Error destroying WebContainer:', error);
-      });
-    };
-  }, []);
-
-  const handleAIResponse = async (data: AIResponse) => {
-    if (data.action === 'create_file' && data.filename) {
-      try {
-        await createFile(data.filename, data.content);
-        const url = `webcontainer://${data.filename}`;
-        setFileUrl(url);
-        toast({
-          title: "Файл создан",
-          description: `Создан файл ${data.filename}`
-        });
-      } catch (error) {
-        console.error('Error creating file:', error);
-        toast({
-          variant: "destructive",
-          title: "Ошибка",
-          description: "Не удалось создать файл. Проверьте консоль для деталей."
-        });
-      }
-    }
-  };
-
   const sendMessage = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() && files.length === 0) return;
     
     const userMessage: Message = {
       role: 'user',
@@ -92,11 +32,13 @@ export function Chat() {
     setIsLoading(true);
     
     try {
-      const response = await fetch('https://backend007.onrender.com/api/chat', {
+      const response = await fetch('http://localhost:3001/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          messages: [...messages, userMessage]
+          messages: [...messages, userMessage],
+          model,
+          files: files.map(f => f.name)
         }),
       });
 
@@ -104,7 +46,7 @@ export function Chat() {
         throw new Error('Ошибка сервера');
       }
 
-      const data: AIResponse = await response.json();
+      const data = await response.json();
       const aiMessage: Message = {
         role: 'assistant',
         content: data.content
@@ -112,8 +54,7 @@ export function Chat() {
       
       setMessages(prev => [...prev, aiMessage]);
       setInput('');
-      
-      await handleAIResponse(data);
+      setFiles([]);
       
     } catch (error) {
       console.error('Error sending message:', error);
@@ -134,6 +75,10 @@ export function Chat() {
     }
   };
 
+  const handleSpeechTranscript = (text: string) => {
+    setInput(text);
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-auto p-4 space-y-4">
@@ -152,25 +97,73 @@ export function Chat() {
       </div>
       
       <div className="p-4 border-t border-border">
-        <div className="flex gap-2">
+        <ModelSelector model={model} setModel={setModel} />
+        
+        <div className="flex gap-2 mt-4">
           <div className="flex-1">
             <Textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
               placeholder="Введите сообщение..."
-              className="min-h-[60px] resize-none"
+              className="min-h-[150px] resize-none" // Увеличили высоту в 2.5 раза (было 60px)
               disabled={isLoading}
             />
           </div>
-          <Button 
-            size="icon"
-            onClick={sendMessage}
-            disabled={isLoading}
-          >
-            <Send className="h-4 w-4" />
-          </Button>
+          <div className="flex flex-col gap-2">
+            <Button 
+              size="icon"
+              onClick={sendMessage}
+              disabled={isLoading}
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => {
+                const fileInput = document.querySelector('input[type="file"]');
+                if (fileInput instanceof HTMLInputElement) {
+                  fileInput.click();
+                }
+              }}
+              className="hover:bg-accent"
+            >
+              <Paperclip className="h-4 w-4" />
+              <input
+                type="file"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                  const selectedFiles = Array.from(e.target.files || []);
+                  setFiles(prev => [...prev, ...selectedFiles]);
+                }}
+              />
+            </Button>
+            <SpeechRecognition onTranscript={handleSpeechTranscript} />
+          </div>
         </div>
+
+        {files.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            {files.map((file, index) => (
+              <div 
+                key={index}
+                className="flex items-center gap-2 bg-secondary p-2 rounded"
+              >
+                <span className="text-sm">{file.name}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setFiles(files.filter((_, i) => i !== index))}
+                >
+                  <span className="sr-only">Удалить файл</span>
+                  ×
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
