@@ -32,6 +32,23 @@ const Preview = ({ fileUrl }: PreviewProps) => {
     loadFileContent();
   }, [fileUrl]);
 
+  return (
+    <div className="h-full flex flex-col">
+      <div className="flex items-center justify-between p-2 border-b border-border">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon">
+            <Smartphone className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon">
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        </div>
+        <Button variant="ghost" size="icon">
+          <Maximize2 className="h-4 w-4" />
+        </Button>
+      </div>
+      
+      <div className="flex-1 overflow-auto">
         {isLoading ? (
           <div className="flex items-center justify-center h-full text-muted-foreground">
             Загрузка...
