@@ -27,7 +27,7 @@ interface ChatRequest {
   messages: Message[];
 }
 
-router.post('/chat', async (req: express.Request<{}, {}, ChatRequest>, res) => {
+router.post('/chat', async (req: express.Request<{}, {}, ChatRequest>, res: express.Response) => {
   try {
     const { messages } = req.body;
 
@@ -40,14 +40,12 @@ router.post('/chat', async (req: express.Request<{}, {}, ChatRequest>, res) => {
     
     // Проверяем, запрашивает ли пользователь создание файла
     if (lastMessage.content.toLowerCase().includes('создай файл')) {
-      // Извлекаем имя файла и содержимое из сообщения
-      // В данном случае используем фиксированные значения для примера
       return res.json({
         role: 'assistant',
         content: 'Файл test.txt создан.',
         action: 'create_file',
         filename: 'test.txt',
-        content: 'Привет, мир!'
+        fileContent: 'Привет, мир!'
       });
     }
 
