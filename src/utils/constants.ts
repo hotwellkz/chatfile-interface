@@ -5,8 +5,9 @@ export const MAX_TOKENS = 4096;
 export const CONTINUE_PROMPT = "Please continue from where you left off.";
 
 export const MODEL_LIST = [
-  'gpt-4o',
-  'gpt-4o-mini'
+  'gpt-4',
+  'gpt-4-turbo-preview',
+  'gpt-3.5-turbo'
 ];
 
 export const PROVIDER_LIST: ProviderInfo[] = [
@@ -16,7 +17,3 @@ export const PROVIDER_LIST: ProviderInfo[] = [
     models: MODEL_LIST
   }
 ];
-
-export const initializeModelList = async () => {
-  return MODEL_LIST;
-};
