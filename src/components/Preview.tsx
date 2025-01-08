@@ -17,9 +17,13 @@ const Preview = ({ fileUrl }: PreviewProps) => {
       
       setIsLoading(true);
       try {
-        // Извлекаем имя файла из URL
+        console.log('Loading file content for URL:', fileUrl); // Добавляем логирование
         const filename = fileUrl.replace('webcontainer://', '');
+        console.log('Extracted filename:', filename);
+        
         const fileContent = await readFile(filename);
+        console.log('File content loaded:', fileContent);
+        
         setContent(fileContent);
       } catch (error) {
         console.error('Error loading file:', error);
@@ -35,9 +39,9 @@ const Preview = ({ fileUrl }: PreviewProps) => {
   return (
     <div className="flex flex-col h-full">
       <div className="p-2 border-b border-border flex items-center justify-between">
-        <a href="#" className="text-sm text-primary hover:underline">
-          preview.lovable.dev
-        </a>
+        <div className="text-sm text-muted-foreground">
+          {fileUrl ? fileUrl.replace('webcontainer://', '') : 'Нет файла для предпросмотра'}
+        </div>
         <div className="flex gap-1">
           <Button variant="ghost" size="icon">
             <Smartphone className="h-4 w-4" />
