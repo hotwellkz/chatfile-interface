@@ -4,23 +4,20 @@ import { OpenAI } from 'openai';
 
 const router = express.Router();
 
-// Настраиваем CORS для разрешенных доменов
 router.use(cors({
   origin: [
     'https://bespoke-bavarois-8deceb.netlify.app',
     'https://7db8c8ea-906e-471a-b06c-1e99127746c8.lovableproject.com',
-    'http://localhost:5173' // для локальной разработки
+    'http://localhost:5173'
   ],
   methods: ['POST'],
   credentials: true
 }));
 
-// Инициализируем OpenAI с ключом из переменных окружения
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Типы для запроса
 type Message = {
   role: 'user' | 'assistant';
   content: string;
@@ -30,8 +27,7 @@ interface ChatRequest {
   messages: Message[];
 }
 
-// Обработчик POST запроса
-router.post('/chat', async (req: express.Request<{}, {}, ChatRequest>, res: express.Response) => {
+router.post('/chat', async (req: express.Request<{}, {}, ChatRequest>, res) => {
   try {
     const { messages } = req.body;
 
@@ -39,6 +35,23 @@ router.post('/chat', async (req: express.Request<{}, {}, ChatRequest>, res: expr
       return res.status(400).json({ error: 'Invalid messages format' });
     }
 
+    // Получаем последнее сообщение пользователя
+    const lastMessage = messages[messages.length - 1];
+    
+    // Проверяем, запрашивает ли пользователь создание файла
+    if (lastMessage.content.toLowerCase().includes('создай файл')) {
+      // Извлекаем имя файла и содержимое из сообщения
+      // В данном случае используем фиксированные значения для примера
+      return res.json({
+        role: 'assistant',
+        content: 'Файл test.txt создан.',
+        action: 'create_file',
+        filename: 'test.txt',
+        content: 'Привет, мир!'
+      });
+    }
+
+    // Если это не запрос на создание файла, используем OpenAI
     const completion = await openai.chat.completions.create({
       model: "gpt-4",
       messages: messages.map(msg => ({
