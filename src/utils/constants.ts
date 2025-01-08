@@ -1,8 +1,8 @@
-import { ProviderInfo } from '@/types';
+import type { ProviderInfo } from '@/types';
 
 export const MODEL_LIST = [
-  'gpt-4',
-  'gpt-4-mini'
+  'gpt-4o',
+  'gpt-4o-mini'
 ];
 
 export const PROVIDER_LIST: ProviderInfo[] = [
