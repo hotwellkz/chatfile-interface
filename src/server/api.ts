@@ -17,6 +17,10 @@ router.post('/chat', async (req: express.Request<{}, {}, ChatRequest>, res: expr
   try {
     const { messages } = req.body;
     
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ error: 'Invalid messages format' });
+    }
+
     const completion = await openai.chat.completions.create({
       model: "gpt-4",
       messages: messages.map(msg => ({
@@ -26,8 +30,8 @@ router.post('/chat', async (req: express.Request<{}, {}, ChatRequest>, res: expr
     });
 
     res.json({ 
-      message: completion.choices[0].message,
-      usage: completion.usage 
+      role: 'assistant',
+      content: completion.choices[0].message.content
     });
   } catch (error) {
     console.error('Error in chat endpoint:', error);
