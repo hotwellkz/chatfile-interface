@@ -8,31 +8,29 @@ let webcontainerInstance: WebContainer | null = null;
 export async function initWebContainer() {
   if (!webcontainerInstance) {
     try {
-      // Очищаем предыдущий экземпляр если он существует
-      if (webcontainerInstance) {
-        webcontainerInstance = null;
-      }
+      console.log('Initializing new WebContainer instance...');
       webcontainerInstance = await WebContainer.boot();
       console.log('WebContainer initialized successfully');
     } catch (error) {
       console.error('Error initializing WebContainer:', error);
       throw error;
     }
+  } else {
+    console.log('Reusing existing WebContainer instance');
   }
   return webcontainerInstance;
 }
 
 /**
  * Создает файл с указанным именем и содержимым
- * @param name - имя файла
- * @param content - содержимое файла
  */
 export async function createFile(name: string, content: string) {
   try {
+    console.log('Creating file:', name, 'with content:', content);
+    
     // Очищаем существующий экземпляр перед созданием нового файла
     clearWebContainer();
     
-    console.log('Creating file:', name, 'with content:', content);
     const container = await initWebContainer();
     await container.fs.writeFile(name, content);
     console.log('File created successfully');
@@ -44,8 +42,6 @@ export async function createFile(name: string, content: string) {
 
 /**
  * Читает содержимое файла
- * @param name - имя файла
- * @returns содержимое файла в виде строки
  */
 export async function readFile(name: string): Promise<string> {
   try {
@@ -64,6 +60,8 @@ export async function readFile(name: string): Promise<string> {
  * Очищает экземпляр WebContainer
  */
 export function clearWebContainer() {
-  webcontainerInstance = null;
-  console.log('WebContainer instance cleared');
+  if (webcontainerInstance) {
+    console.log('Clearing WebContainer instance');
+    webcontainerInstance = null;
+  }
 }
