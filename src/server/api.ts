@@ -7,7 +7,7 @@ const router = express.Router();
 // Настраиваем CORS для разрешенных доменов
 router.use(cors({
   origin: [
-    'https://7db8c8ea-906e-471a-b06c-1e99127746c8.lovableproject.com',
+    'https://bespoke-bavarois-8deceb.netlify.app',
     'http://localhost:5173' // для локальной разработки
   ],
   methods: ['POST'],
