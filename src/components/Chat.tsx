@@ -6,14 +6,8 @@ import { useToast } from "@/hooks/use-toast";
 import { ModelSelector } from "./ModelSelector";
 import { FilePreview } from "./FilePreview";
 import { SpeechRecognition } from "./SpeechRecognition";
-import Cookies from 'js-cookie';
-import { initializeModelList, MODEL_LIST } from '@/utils/constants';
-import { ProviderInfo } from '@/types';
-import { APIKeyManager } from './APIKeyManager';
+import { supabase } from "@/integrations/supabase/client";
 import { ExamplePrompts } from './ExamplePrompts';
-
-const TEXTAREA_MIN_HEIGHT = 150;
-const TEXTAREA_MAX_HEIGHT = 400;
 
 interface Message {
   role: 'user' | 'assistant';
@@ -90,41 +84,61 @@ export function Chat() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://backend007.onrender.com/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) throw new Error('Не авторизован')
+
+      const response = await supabase.functions.invoke('chat', {
+        body: {
           messages: [...messages, userMessage],
           model,
-          files: files.map(f => f.name)
-        }),
-      });
+        },
+      })
 
-      if (!response.ok) {
-        throw new Error('Ошибка сервера');
+      if (response.error) {
+        throw new Error(response.error.message || 'Ошибка при отправке сообщения')
       }
 
-      const data = await response.json();
-      const aiMessage: Message = {
-        role: 'assistant',
-        content: data.content
-      };
+      const reader = response.data.getReader()
+      let accumulatedContent = ''
 
-      setMessages(prev => [...prev, aiMessage]);
-      setInput('');
-      setFiles([]);
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const text = new TextDecoder().decode(value)
+        accumulatedContent += text
+
+        setMessages(prev => {
+          const newMessages = [...prev]
+          const lastMessage = newMessages[newMessages.length - 1]
+          
+          if (lastMessage?.role === 'assistant') {
+            lastMessage.content = accumulatedContent
+          } else {
+            newMessages.push({
+              role: 'assistant',
+              content: accumulatedContent
+            })
+          }
+          
+          return newMessages
+        })
+      }
+
+      setInput('')
+      setFiles([])
 
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('Error sending message:', error)
       toast({
         variant: "destructive",
         title: "Ошибка",
         description: error instanceof Error ? error.message : 'Произошла ошибка при отправке сообщения'
-      });
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
