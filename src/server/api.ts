@@ -4,7 +4,6 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Создаем роутер
 const router = express.Router();
 
 // Настраиваем CORS с необходимыми заголовками
@@ -57,4 +56,4 @@ router.post('/chat', async (req: express.Request<{}, {}, ChatRequest>, res: expr
   }
 });
 
-export { router };
+export default router;

@@ -1,5 +1,5 @@
 import express from 'express';
-import { router } from './api.js';
+import apiRouter from './api.js';
 import dotenv from 'dotenv';
 
 // Загружаем переменные окружения
@@ -20,7 +20,7 @@ app.use((req, res, next) => {
 app.use(express.json());
 
 // Используем роутер для /api путей
-app.use('/api', router);
+app.use('/api', apiRouter);
 
 // Запускаем сервер
 app.listen(port, () => {
