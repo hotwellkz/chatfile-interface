@@ -32,7 +32,7 @@ export function Chat() {
     setIsLoading(true);
     
     try {
-      const response = await fetch('http://localhost:3001/api/chat', {
+      const response = await fetch('https://backend007.onrender.com/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -106,7 +106,7 @@ export function Chat() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
               placeholder="Введите сообщение..."
-              className="min-h-[150px] resize-none" // Увеличили высоту в 2.5 раза (было 60px)
+              className="min-h-[150px] resize-none"
               disabled={isLoading}
             />
           </div>
