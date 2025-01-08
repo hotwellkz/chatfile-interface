@@ -37,7 +37,6 @@ router.options('/chat', (_req, res) => {
   res.end();
 });
 
-// Fix TypeScript error by using the correct router.post type signature
 router.post('/chat', async (req: express.Request, res: express.Response) => {
   try {
     const { messages, model } = req.body;
@@ -56,7 +55,7 @@ router.post('/chat', async (req: express.Request, res: express.Response) => {
     res.writeHead(200, corsHeaders);
 
     const stream = await openai.chat.completions.create({
-      model: model || "gpt-4o-mini",
+      model: model || "gpt-4",
       messages: messages,
       stream: true,
       max_tokens: MAX_TOKENS,
@@ -81,7 +80,7 @@ router.post('/chat', async (req: express.Request, res: express.Response) => {
         ];
 
         const continuationStream = await openai.chat.completions.create({
-          model: model || "gpt-4o-mini",
+          model: model || "gpt-4",
           messages: continuationMessages,
           stream: true,
           max_tokens: MAX_TOKENS,

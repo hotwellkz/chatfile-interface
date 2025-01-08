@@ -1,19 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
-import { Send, Paperclip } from "lucide-react";
-import { Button } from "./ui/button";
-import { Textarea } from "./ui/textarea";
+import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { ModelSelector } from "./ModelSelector";
+import { ChatInput } from "./chat/ChatInput";
+import { ChatMessages } from "./chat/ChatMessages";
+import { ChatControls } from "./chat/ChatControls";
+import { ChatHeader } from "./chat/ChatHeader";
 import { FilePreview } from "./FilePreview";
-import { SpeechRecognition } from "./SpeechRecognition";
+import { ExamplePrompts } from "./ExamplePrompts";
 import Cookies from 'js-cookie';
-import { initializeModelList, MODEL_LIST } from '@/utils/constants';
-import { ProviderInfo } from '@/types';
-import { APIKeyManager } from './APIKeyManager';
-import { ExamplePrompts } from './ExamplePrompts';
-
-const TEXTAREA_MIN_HEIGHT = 150;
-const TEXTAREA_MAX_HEIGHT = 400;
+import { initializeModelList } from '@/utils/constants';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -26,17 +20,8 @@ export function Chat() {
   const [isLoading, setIsLoading] = useState(false);
   const [model, setModel] = useState('gpt-4');
   const [files, setFiles] = useState<File[]>([]);
-  const [transcript, setTranscript] = useState('');
   const { toast } = useToast();
   const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
-  const [modelList, setModelList] = useState(MODEL_LIST);
-  const [isModelSettingsCollapsed, setIsModelSettingsCollapsed] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [recognition, setRecognition] = useState<any>(null);
-
-  const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(event.target.value);
-  };
 
   useEffect(() => {
     const storedApiKeys = Cookies.get('apiKeys');
@@ -46,37 +31,11 @@ export function Chat() {
         setApiKeys(parsedKeys);
       }
     }
-    initializeModelList().then((modelList) => {
-      setModelList(modelList);
-    });
-    if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-
-      recognition.onresult = (event) => {
-        const transcript = Array.from(event.results)
-          .map((result) => result[0])
-          .map((result) => result.transcript)
-          .join('');
-        setTranscript(transcript);
-        if (handleInputChange) {
-          const syntheticEvent = {
-            target: { value: transcript },
-          } as React.ChangeEvent<HTMLTextAreaElement>;
-          handleInputChange(syntheticEvent);
-        }
-      };
-
-      recognition.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
-        setIsListening(false);
-      };
-
-      setRecognition(recognition);
-    }
   }, []);
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(event.target.value);
+  };
 
   const sendMessage = async () => {
     if (!input.trim() && files.length === 0) return;
@@ -126,16 +85,16 @@ export function Chat() {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
-
-  const handleSpeechTranscript = (text: string) => {
-    setInput(text);
-    setTranscript(text);
+  const handleFileUpload = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+      const selectedFiles = Array.from((e.target as HTMLInputElement).files || []);
+      setFiles(prev => [...prev, ...selectedFiles]);
+    };
+    input.click();
   };
 
   const handlePaste = async (e: React.ClipboardEvent) => {
@@ -161,94 +120,46 @@ export function Chat() {
     setFiles(prev => [...prev, ...imageFiles]);
   };
 
-  const handleDragEnter = (e: React.DragEvent<HTMLTextAreaElement>) => {
-    e.preventDefault();
-    (e.target as HTMLTextAreaElement).style.border = '2px solid #1488fc';
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLTextAreaElement>) => {
-    e.preventDefault();
-    (e.target as HTMLTextAreaElement).style.border = '2px solid #1488fc';
-  };
-
-  const handleDragLeave = (e: React.DragEvent<HTMLTextAreaElement>) => {
-    e.preventDefault();
-    (e.target as HTMLTextAreaElement).style.border = '1px solid var(--border)';
-  };
-
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-auto p-4 space-y-4">
-        {messages.map((msg, idx) => (
-          <div
-            key={idx}
-            className={`p-3 rounded-lg ${
-              msg.role === 'user'
-                ? 'bg-primary text-primary-foreground ml-auto'
-                : 'bg-muted'
-            } max-w-[80%]`}
-          >
-            {msg.content}
-          </div>
-        ))}
-      </div>
+      <ChatHeader
+        model={model}
+        setModel={setModel}
+        provider={{ name: 'openai', label: 'OpenAI' }}
+        apiKey={apiKeys['openai'] || ''}
+        onApiKeyChange={(key) => {
+          setApiKeys(prev => ({ ...prev, openai: key }));
+          Cookies.set('apiKeys', JSON.stringify({ ...apiKeys, openai: key }));
+        }}
+      />
+
+      <ChatMessages messages={messages} />
 
       <div className="p-4 border-t border-border">
-        <ModelSelector model={model} setModel={setModel} />
-
         <FilePreview
           files={files}
           onRemove={(index) => setFiles(files.filter((_, i) => i !== index))}
         />
 
-        <div className="flex gap-2 mt-4">
+        <div className="flex gap-2">
           <div className="flex-1">
-            <Textarea
-              value={input}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyPress}
+            <ChatInput
+              input={input}
+              isLoading={isLoading}
+              onInputChange={handleInputChange}
+              onSendMessage={sendMessage}
               onPaste={handlePaste}
               onDrop={handleDrop}
-              onDragEnter={handleDragEnter}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              placeholder="Введите сообщение..."
-              style={{
-                minHeight: TEXTAREA_MIN_HEIGHT,
-                maxHeight: TEXTAREA_MAX_HEIGHT
-              }}
-              className="resize-none transition-all duration-200 hover:border-primary"
-              disabled={isLoading}
             />
           </div>
-          <div className="flex flex-col gap-2">
-            <Button
-              size="icon"
-              onClick={sendMessage}
-              disabled={isLoading}
-            >
-              <Send className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.multiple = true;
-                input.accept = 'image/*';
-                input.onchange = (e) => {
-                  const selectedFiles = Array.from((e.target as HTMLInputElement).files || []);
-                  setFiles(prev => [...prev, ...selectedFiles]);
-                };
-                input.click();
-              }}
-              className="hover:bg-accent"
-            >
-              <Paperclip className="h-4 w-4" />
-            </Button>
-            <SpeechRecognition onTranscript={handleSpeechTranscript} />
-          </div>
+          
+          <ChatControls
+            onSendMessage={sendMessage}
+            onFileUpload={handleFileUpload}
+            isLoading={isLoading}
+            hasInput={input.trim().length > 0 || files.length > 0}
+            onTranscript={setInput}
+          />
         </div>
 
         {input.length > 3 && (
