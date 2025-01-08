@@ -1,25 +1,18 @@
-export const MAX_RESPONSE_SEGMENTS = 5;
-export const MAX_TOKENS = 1000;
-export const CONTINUE_PROMPT = "Please continue from where you left off.";
+import type { ProviderInfo } from '@/types';
 
-export interface Model {
-  id: string;
-  name: string;
-}
-
-export const MODEL_LIST: Model[] = [
-  { id: 'gpt-4o', name: 'GPT-4' },
-  { id: 'gpt-4o-mini', name: 'GPT-4 Mini' }
+export const MODEL_LIST = [
+  'gpt-4o',
+  'gpt-4o-mini'
 ];
 
-export const PROVIDER_LIST = [
+export const PROVIDER_LIST: ProviderInfo[] = [
   {
     name: 'openai',
     label: 'OpenAI',
-    models: ['gpt-4o', 'gpt-4o-mini']
+    models: MODEL_LIST
   }
 ];
 
-export const initializeModelList = async (): Promise<Model[]> => {
+export const initializeModelList = async () => {
   return MODEL_LIST;
 };
