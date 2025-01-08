@@ -9,6 +9,11 @@ export interface Message {
   content: string;
 }
 
+export interface Model {
+  id: string;
+  name: string;
+}
+
 declare global {
   interface Window {
     SpeechRecognition: any;

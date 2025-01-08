@@ -1,23 +1,44 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { ModelSelector } from "./ModelSelector";
 import { ChatInput } from "./chat/ChatInput";
 import { ChatMessages } from "./chat/ChatMessages";
 import { ChatControls } from "./chat/ChatControls";
+import { FilePreview } from "./FilePreview";
+import { ExamplePrompts } from "./chat/ExamplePrompts";
+import { APIKeyManager } from "./chat/APIKeyManager";
+import { MODEL_LIST, PROVIDER_LIST, initializeModelList } from '@/utils/constants';
+import type { Message, ProviderInfo } from '@/types';
 import Cookies from 'js-cookie';
-
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-}
 
 export function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [model, setModel] = useState('gpt-4');
+  const [model, setModel] = useState('gpt-4o');
   const [files, setFiles] = useState<File[]>([]);
+  const [provider, setProvider] = useState<ProviderInfo>(PROVIDER_LIST[0]);
+  const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
+  const [modelList, setModelList] = useState(MODEL_LIST);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    try {
+      const storedApiKeys = Cookies.get('apiKeys');
+      if (storedApiKeys) {
+        const parsedKeys = JSON.parse(storedApiKeys);
+        if (typeof parsedKeys === 'object' && parsedKeys !== null) {
+          setApiKeys(parsedKeys);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading API keys:', error);
+      Cookies.remove('apiKeys');
+    }
+
+    initializeModelList().then(setModelList);
+  }, []);
 
   const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(event.target.value);
@@ -35,9 +56,12 @@ export function Chat() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://backend007.onrender.com/api/chat', {
+      const response = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKeys[provider.name]}`
+        },
         body: JSON.stringify({
           messages: [...messages, userMessage],
           model,
@@ -60,7 +84,7 @@ export function Chat() {
       setFiles([]);
 
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('Error:', error);
       toast({
         variant: "destructive",
         title: "Ошибка",
@@ -71,11 +95,14 @@ export function Chat() {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
+  const updateApiKey = (provider: string, key: string) => {
+    const updatedApiKeys = { ...apiKeys, [provider]: key };
+    setApiKeys(updatedApiKeys);
+    Cookies.set('apiKeys', JSON.stringify(updatedApiKeys), {
+      expires: 30,
+      secure: true,
+      sameSite: 'strict',
+    });
   };
 
   const handleFileSelect = () => {
@@ -90,48 +117,6 @@ export function Chat() {
     input.click();
   };
 
-  const handlePaste = async (e: React.ClipboardEvent) => {
-    const items = e.clipboardData?.items;
-    if (!items) return;
-
-    for (const item of items) {
-      if (item.type.startsWith('image/')) {
-        e.preventDefault();
-        const file = item.getAsFile();
-        if (file) {
-          setFiles(prev => [...prev, file]);
-        }
-        break;
-      }
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    const droppedFiles = Array.from(e.dataTransfer.files);
-    const imageFiles = droppedFiles.filter(file => file.type.startsWith('image/'));
-    setFiles(prev => [...prev, ...imageFiles]);
-  };
-
-  const handleDragEnter = (e: React.DragEvent<HTMLTextAreaElement>) => {
-    e.preventDefault();
-    (e.target as HTMLTextAreaElement).style.border = '2px solid #1488fc';
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLTextAreaElement>) => {
-    e.preventDefault();
-    (e.target as HTMLTextAreaElement).style.border = '2px solid #1488fc';
-  };
-
-  const handleDragLeave = (e: React.DragEvent<HTMLTextAreaElement>) => {
-    e.preventDefault();
-    (e.target as HTMLTextAreaElement).style.border = '1px solid var(--border)';
-  };
-
-  const handleSpeechTranscript = (text: string) => {
-    setInput(text);
-  };
-
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-auto">
@@ -139,35 +124,49 @@ export function Chat() {
       </div>
 
       <div className="p-4 border-t border-border">
-        <ModelSelector model={model} setModel={setModel} />
+        <ModelSelector 
+          model={model} 
+          setModel={setModel}
+          modelList={modelList}
+          provider={provider}
+          setProvider={setProvider}
+          providerList={PROVIDER_LIST}
+          apiKeys={apiKeys}
+        />
+
+        {provider && (
+          <APIKeyManager
+            provider={provider}
+            apiKey={apiKeys[provider.name] || ''}
+            setApiKey={(key) => updateApiKey(provider.name, key)}
+          />
+        )}
+
+        <FilePreview
+          files={files}
+          onRemove={(index) => setFiles(files.filter((_, i) => i !== index))}
+        />
 
         <div className="flex gap-2 mt-4">
           <ChatInput
+            ref={textareaRef}
             input={input}
             files={files}
             isLoading={isLoading}
             onInputChange={handleInputChange}
-            onKeyPress={handleKeyPress}
-            onPaste={handlePaste}
-            onDrop={handleDrop}
-            onDragEnter={handleDragEnter}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onRemoveFile={(index) => setFiles(files.filter((_, i) => i !== index))}
+            onSend={sendMessage}
           />
           <ChatControls
             onSend={sendMessage}
             onFileSelect={handleFileSelect}
             isLoading={isLoading}
-            onTranscript={handleSpeechTranscript}
           />
         </div>
 
-        {input.length > 3 && (
-          <div className="mt-2 text-xs text-muted-foreground text-right">
-            Нажмите Shift + Enter для новой строки
-          </div>
-        )}
+        {!messages.length && <ExamplePrompts handlePrompt={(e, prompt) => {
+          setInput(prompt);
+          sendMessage();
+        }} />}
       </div>
     </div>
   );
