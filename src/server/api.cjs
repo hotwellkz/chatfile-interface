@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { streamText } = require('./utils/stream-text.cjs');
-const { MAX_RESPONSE_SEGMENTS, MAX_TOKENS, CONTINUE_PROMPT } = require('./utils/constants.cjs');
-const SwitchableStream = require('./utils/SwitchableStream.cjs');
+const { streamText } = require('../utils/stream-text.cjs');
+const { MAX_RESPONSE_SEGMENTS, MAX_TOKENS, CONTINUE_PROMPT } = require('../utils/constants.cjs');
+const SwitchableStream = require('../utils/SwitchableStream.cjs');
 
 require('dotenv').config();
 
