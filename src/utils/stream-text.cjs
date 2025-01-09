@@ -1,25 +1,6 @@
-import { MAX_TOKENS } from './constants';
+const { MAX_TOKENS } = require('./constants.cjs');
 
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-}
-
-interface StreamingOptions {
-  toolChoice: 'none' | 'auto';
-  onFinish?: (params: { text: string; finishReason: string }) => Promise<void>;
-}
-
-interface ApiKeys {
-  [key: string]: string;
-}
-
-export async function streamText(
-  messages: Message[],
-  env: NodeJS.ProcessEnv,
-  options: StreamingOptions = { toolChoice: 'none' },
-  apiKeys: ApiKeys
-): Promise<{ stream: ReadableStream; toAIStream: () => ReadableStream }> {
+async function streamText(messages, env, options = { toolChoice: 'none' }, apiKeys) {
   const openaiKey = apiKeys['openai'] || env.OPENAI_API_KEY;
   
   if (!openaiKey) {
@@ -52,6 +33,10 @@ export async function streamText(
 
   return {
     stream,
-    toAIStream: () => stream as ReadableStream,
+    toAIStream: () => stream,
   };
 }
+
+module.exports = {
+  streamText
+};
