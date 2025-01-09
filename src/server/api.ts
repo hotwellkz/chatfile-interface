@@ -1,6 +1,9 @@
 import express from 'express';
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
+import { MAX_RESPONSE_SEGMENTS, MAX_TOKENS, CONTINUE_PROMPT } from '../utils/constants';
+import { streamText, type Messages } from '../utils/stream-text';
+import SwitchableStream from '../utils/SwitchableStream';
 
 dotenv.config();
 
@@ -11,36 +14,72 @@ if (!process.env.OPENAI_API_KEY) {
   process.exit(1);
 }
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const parseCookies = (cookieHeader: string) => {
+  const cookies: Record<string, string> = {};
+  if (cookieHeader) {
+    cookieHeader.split(';').forEach(cookie => {
+      const [name, ...rest] = cookie.trim().split('=');
+      if (name && rest.length) {
+        cookies[decodeURIComponent(name)] = decodeURIComponent(rest.join('='));
+      }
+    });
+  }
+  return cookies;
+};
 
-router.post('/chat', async (req: express.Request, res: express.Response) => {
+router.post('/chat', async (req, res) => {
   try {
-    const { messages, model, files } = req.body;
+    const { messages, model } = req.body;
+    const cookieHeader = req.headers.cookie || '';
+    const apiKeys = JSON.parse(parseCookies(cookieHeader).apiKeys || '{}');
 
     if (!messages || !Array.isArray(messages)) {
       res.status(400).json({ error: 'Неверный формат сообщений' });
       return;
     }
 
-    const completion = await openai.chat.completions.create({
-      model: model || "gpt-4",
-      messages: messages,
-      temperature: 0.7,
-      max_tokens: 1000,
-    });
+    const stream = new SwitchableStream();
 
-    const aiResponse = completion.choices[0].message;
+    const options = {
+      toolChoice: 'none',
+      onFinish: async ({ text: content, finishReason }: { text: string; finishReason: string }) => {
+        if (finishReason !== 'length') {
+          return stream.close();
+        }
 
-    res.json({
-      content: aiResponse.content,
-      files: files
-    });
+        if (stream.switches >= MAX_RESPONSE_SEGMENTS) {
+          throw new Error('Cannot continue message: Maximum segments reached');
+        }
 
-  } catch (error) {
+        const switchesLeft = MAX_RESPONSE_SEGMENTS - stream.switches;
+        console.log(`Reached max token limit (${MAX_TOKENS}): Continuing message (${switchesLeft} switches left)`);
+
+        messages.push({ role: 'assistant', content });
+        messages.push({ role: 'user', content: CONTINUE_PROMPT });
+
+        const result = await streamText(messages, process.env, options, apiKeys);
+        return stream.switchSource(result.toAIStream());
+      },
+    };
+
+    const result = await streamText(messages, process.env, options, apiKeys);
+    stream.switchSource(result.toAIStream());
+
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    stream.readable.pipeTo(res);
+
+  } catch (error: any) {
     console.error('Ошибка при обработке запроса чата:', error);
-    res.status(500).json({ 
+    
+    if (error.message?.includes('API key')) {
+      res.status(401).json({
+        error: 'Неверный или отсутствующий API ключ',
+        details: error.message
+      });
+      return;
+    }
+
+    res.status(500).json({
       error: 'Внутренняя ошибка сервера',
       details: error instanceof Error ? error.message : 'Неизвестная ошибка'
     });

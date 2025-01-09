@@ -1,11 +1,3 @@
-export const TEXTAREA_MIN_HEIGHT = 150;
-export const TEXTAREA_MAX_HEIGHT = 400;
-
-export const MODEL_LIST = [
-  'gpt-4',
-  'gpt-4-mini'
-];
-
-export const initializeModelList = async () => {
-  return MODEL_LIST;
-};
+export const MAX_RESPONSE_SEGMENTS = 5;
+export const MAX_TOKENS = 4096;
+export const CONTINUE_PROMPT = 'Please continue from where you left off.';
