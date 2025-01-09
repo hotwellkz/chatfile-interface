@@ -7,9 +7,9 @@ dotenv.config();
 
 const app = express();
 
-// Настройка CORS для разрешения запросов с любого домена
+// Настройка CORS для разрешения запросов с вашего домена
 app.use(cors({
-  origin: '*',
+  origin: ['https://1wox.com', 'http://localhost:8080'],
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
