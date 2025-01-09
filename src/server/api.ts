@@ -1,9 +1,9 @@
 import express from 'express';
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
-import { MAX_RESPONSE_SEGMENTS, MAX_TOKENS, CONTINUE_PROMPT } from '../utils/constants';
-import { streamText, type Messages, type StreamingOptions } from '../utils/stream-text';
-import SwitchableStream from '../utils/SwitchableStream';
+import { MAX_RESPONSE_SEGMENTS, MAX_TOKENS, CONTINUE_PROMPT } from '../utils/constants.js';
+import { streamText, type Messages, type StreamingOptions } from '../utils/stream-text.js';
+import SwitchableStream from '../utils/SwitchableStream.js';
 
 dotenv.config();
 
@@ -67,7 +67,6 @@ router.post('/chat', async (req, res) => {
 
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     
-    // Преобразуем stream.readable в WritableStream для res
     if (stream.readable && res.write && res.end) {
       stream.readable.pipeTo(new WritableStream({
         write(chunk) {

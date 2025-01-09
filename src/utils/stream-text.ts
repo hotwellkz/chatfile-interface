@@ -1,3 +1,5 @@
+import { MAX_TOKENS } from './constants.js';
+
 export type Messages = Array<{ role: 'user' | 'assistant'; content: string }>;
 
 export interface StreamingOptions {
