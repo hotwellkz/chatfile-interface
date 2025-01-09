@@ -1,21 +1,31 @@
-const express = require('express');
-const OpenAI = require('openai');
-const dotenv = require('dotenv');
-const { MAX_RESPONSE_SEGMENTS, MAX_TOKENS, CONTINUE_PROMPT } = require('../utils/constants');
-const { streamText } = require('../utils/stream-text');
-const SwitchableStream = require('../utils/SwitchableStream');
+import { Request, Response } from 'express';
+import { OpenAI } from 'openai';
+import { config } from 'dotenv';
+import { MAX_RESPONSE_SEGMENTS, MAX_TOKENS, CONTINUE_PROMPT } from '../utils/constants';
+import { streamText } from '../utils/stream-text';
+import { SwitchableStream } from '../utils/SwitchableStream';
 
+const express = require('express');
 const router = express.Router();
 
-dotenv.config();
+config();
 
 if (!process.env.OPENAI_API_KEY) {
   console.error('OPENAI_API_KEY не найден в переменных окружения');
   process.exit(1);
 }
 
-const parseCookies = (cookieHeader: string) => {
-  const cookies: Record<string, string> = {};
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+interface ApiKeys {
+  [key: string]: string;
+}
+
+const parseCookies = (cookieHeader: string): ApiKeys => {
+  const cookies: ApiKeys = {};
   if (cookieHeader) {
     cookieHeader.split(';').forEach(cookie => {
       const [name, ...rest] = cookie.trim().split('=');
@@ -27,9 +37,9 @@ const parseCookies = (cookieHeader: string) => {
   return cookies;
 };
 
-router.post('/chat', async (req, res) => {
+router.post('/chat', async (req: Request, res: Response) => {
   try {
-    const { messages, model } = req.body;
+    const { messages, model } = req.body as { messages: Message[]; model: string };
     const cookieHeader = req.headers.cookie || '';
     const apiKeys = JSON.parse(parseCookies(cookieHeader).apiKeys || '{}');
 
@@ -41,7 +51,7 @@ router.post('/chat', async (req, res) => {
     const stream = new SwitchableStream();
 
     const options = {
-      toolChoice: 'none',
+      toolChoice: 'none' as const,
       onFinish: async ({ text: content, finishReason }: { text: string; finishReason: string }) => {
         if (finishReason !== 'length') {
           return stream.close();

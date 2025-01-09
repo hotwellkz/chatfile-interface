@@ -1,9 +1,11 @@
+import { Request, Response } from 'express';
+import { config } from 'dotenv';
+
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
 const apiRouter = require('./api');
 
-dotenv.config();
+config();
 
 const app = express();
 
