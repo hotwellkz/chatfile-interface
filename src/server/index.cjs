@@ -1,11 +1,7 @@
-import { Request, Response } from 'express';
-import { config } from 'dotenv';
-
 const express = require('express');
 const cors = require('cors');
-const apiRouter = require('./api');
-
-config();
+const apiRouter = require('./api.cjs');
+require('dotenv').config();
 
 const app = express();
 
@@ -16,7 +12,7 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-  origin: function(origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+  origin: function(origin, callback) {
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {

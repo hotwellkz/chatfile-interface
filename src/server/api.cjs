@@ -1,31 +1,16 @@
-import { Request, Response } from 'express';
-import { OpenAI } from 'openai';
-import { config } from 'dotenv';
-import { MAX_RESPONSE_SEGMENTS, MAX_TOKENS, CONTINUE_PROMPT } from '../utils/constants';
-import { streamText } from '../utils/stream-text';
-import { SwitchableStream } from '../utils/SwitchableStream';
-
 const express = require('express');
+const { OpenAI } = require('openai');
 const router = express.Router();
 
-config();
+require('dotenv').config();
 
 if (!process.env.OPENAI_API_KEY) {
   console.error('OPENAI_API_KEY не найден в переменных окружения');
   process.exit(1);
 }
 
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-}
-
-interface ApiKeys {
-  [key: string]: string;
-}
-
-const parseCookies = (cookieHeader: string): ApiKeys => {
-  const cookies: ApiKeys = {};
+const parseCookies = (cookieHeader) => {
+  const cookies = {};
   if (cookieHeader) {
     cookieHeader.split(';').forEach(cookie => {
       const [name, ...rest] = cookie.trim().split('=');
@@ -37,9 +22,9 @@ const parseCookies = (cookieHeader: string): ApiKeys => {
   return cookies;
 };
 
-router.post('/chat', async (req: Request, res: Response) => {
+router.post('/chat', async (req, res) => {
   try {
-    const { messages, model } = req.body as { messages: Message[]; model: string };
+    const { messages, model } = req.body;
     const cookieHeader = req.headers.cookie || '';
     const apiKeys = JSON.parse(parseCookies(cookieHeader).apiKeys || '{}');
 
@@ -48,11 +33,13 @@ router.post('/chat', async (req: Request, res: Response) => {
       return;
     }
 
-    const stream = new SwitchableStream();
+    const stream = new (require('../utils/SwitchableStream.cjs'))();
+    const { streamText } = require('../utils/stream-text.cjs');
+    const { MAX_RESPONSE_SEGMENTS, MAX_TOKENS, CONTINUE_PROMPT } = require('../utils/constants.cjs');
 
     const options = {
-      toolChoice: 'none' as const,
-      onFinish: async ({ text: content, finishReason }: { text: string; finishReason: string }) => {
+      toolChoice: 'none',
+      onFinish: async ({ text: content, finishReason }) => {
         if (finishReason !== 'length') {
           return stream.close();
         }
@@ -88,7 +75,7 @@ router.post('/chat', async (req: Request, res: Response) => {
       }));
     }
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Ошибка при обработке запроса чата:', error);
     
     if (error.message?.includes('API key')) {

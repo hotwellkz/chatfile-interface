@@ -1,9 +1,7 @@
 class SwitchableStream {
-  private currentController: ReadableStreamDefaultController | null = null;
-  private _switches = 0;
-  public readable: ReadableStream;
-
   constructor() {
+    this.currentController = null;
+    this._switches = 0;
     this.readable = new ReadableStream({
       start: (controller) => {
         this.currentController = controller;
@@ -15,7 +13,7 @@ class SwitchableStream {
     return this._switches;
   }
 
-  async switchSource(newSource: ReadableStream) {
+  async switchSource(newSource) {
     this._switches++;
     const reader = newSource.getReader();
 
