@@ -15,24 +15,13 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-interface ChatRequest {
-  messages: Array<{
-    role: 'user' | 'assistant';
-    content: string;
-  }>;
-  model: string;
-  files?: string[];
-}
-
 router.post('/chat', async (req: express.Request, res: express.Response) => {
   try {
-    const { messages, model, files } = req.body as ChatRequest;
+    const { messages, model, files } = req.body;
 
     if (!messages || !Array.isArray(messages)) {
       return res.status(400).json({ error: 'Неверный формат сообщений' });
     }
-
-    console.log('Отправка запроса к OpenAI:', { messages, model, files });
 
     const completion = await openai.chat.completions.create({
       model: model || "gpt-4",
@@ -42,8 +31,6 @@ router.post('/chat', async (req: express.Request, res: express.Response) => {
     });
 
     const aiResponse = completion.choices[0].message;
-
-    console.log('Получен ответ от OpenAI:', aiResponse);
 
     res.json({
       content: aiResponse.content,
