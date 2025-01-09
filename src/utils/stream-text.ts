@@ -1,4 +1,4 @@
-import { MAX_TOKENS } from './constants.js';
+import { MAX_TOKENS } from './constants';
 
 export type Messages = Array<{ role: 'user' | 'assistant'; content: string }>;
 
