@@ -1,6 +1,8 @@
 const express = require('express');
-const { OpenAI } = require('openai');
 const router = express.Router();
+const { streamText } = require('../utils/stream-text.cjs');
+const { MAX_RESPONSE_SEGMENTS, MAX_TOKENS, CONTINUE_PROMPT } = require('../utils/constants.cjs');
+const SwitchableStream = require('../utils/SwitchableStream.cjs');
 
 require('dotenv').config();
 
@@ -33,10 +35,8 @@ router.post('/chat', async (req, res) => {
       return;
     }
 
-    const stream = new (require('../utils/SwitchableStream.cjs'))();
-    const { streamText } = require('../utils/stream-text.cjs');
-    const { MAX_RESPONSE_SEGMENTS, MAX_TOKENS, CONTINUE_PROMPT } = require('../utils/constants.cjs');
-
+    const stream = new SwitchableStream();
+    
     const options = {
       toolChoice: 'none',
       onFinish: async ({ text: content, finishReason }) => {
