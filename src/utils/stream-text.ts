@@ -1,16 +1,14 @@
-import { MAX_TOKENS } from './constants';
-
 export type Messages = Array<{ role: 'user' | 'assistant'; content: string }>;
 
 export interface StreamingOptions {
-  toolChoice?: 'none' | 'auto';
+  toolChoice: 'none' | 'auto';
   onFinish?: (params: { text: string; finishReason: string }) => Promise<void>;
 }
 
 export async function streamText(
   messages: Messages,
   env: any,
-  options: StreamingOptions = {},
+  options: StreamingOptions = { toolChoice: 'none' },
   apiKeys: Record<string, string>
 ) {
   const openaiKey = apiKeys['openai'] || env.OPENAI_API_KEY;
@@ -45,6 +43,6 @@ export async function streamText(
 
   return {
     stream,
-    toAIStream: () => stream,
+    toAIStream: () => stream as ReadableStream,
   };
 }

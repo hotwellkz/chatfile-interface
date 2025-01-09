@@ -2,7 +2,7 @@ import express from 'express';
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
 import { MAX_RESPONSE_SEGMENTS, MAX_TOKENS, CONTINUE_PROMPT } from '../utils/constants';
-import { streamText, type Messages } from '../utils/stream-text';
+import { streamText, type Messages, type StreamingOptions } from '../utils/stream-text';
 import SwitchableStream from '../utils/SwitchableStream';
 
 dotenv.config();
@@ -40,7 +40,7 @@ router.post('/chat', async (req, res) => {
 
     const stream = new SwitchableStream();
 
-    const options = {
+    const options: StreamingOptions = {
       toolChoice: 'none',
       onFinish: async ({ text: content, finishReason }: { text: string; finishReason: string }) => {
         if (finishReason !== 'length') {
@@ -66,7 +66,18 @@ router.post('/chat', async (req, res) => {
     stream.switchSource(result.toAIStream());
 
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-    stream.readable.pipeTo(res);
+    
+    // Преобразуем stream.readable в WritableStream для res
+    if (stream.readable && res.write && res.end) {
+      stream.readable.pipeTo(new WritableStream({
+        write(chunk) {
+          res.write(chunk);
+        },
+        close() {
+          res.end();
+        }
+      }));
+    }
 
   } catch (error: any) {
     console.error('Ошибка при обработке запроса чата:', error);
