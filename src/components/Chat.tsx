@@ -49,7 +49,7 @@ export function Chat() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://backend007.onrender.com/api/chat', {
+      const response = await fetch('https://chatfile-interface.pages.dev/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
