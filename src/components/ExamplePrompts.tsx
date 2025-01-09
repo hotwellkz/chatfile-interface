@@ -3,7 +3,7 @@ import { Button } from "./ui/button";
 const EXAMPLE_PROMPTS = [
   "Создай простое веб-приложение",
   "Помоги мне с React компонентом",
-  "Как использовать TypeScript?"
+  "Как использовать TypeScript??"
 ];
 
 export const ExamplePrompts = (handlePrompt: (event: React.MouseEvent, prompt: string) => void) => {
