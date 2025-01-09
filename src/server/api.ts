@@ -1,13 +1,13 @@
-import express from 'express';
-import OpenAI from 'openai';
-import dotenv from 'dotenv';
-import { MAX_RESPONSE_SEGMENTS, MAX_TOKENS, CONTINUE_PROMPT } from '../utils/constants.js';
-import { streamText, type Messages, type StreamingOptions } from '../utils/stream-text.js';
-import SwitchableStream from '../utils/SwitchableStream.js';
-
-dotenv.config();
+const express = require('express');
+const OpenAI = require('openai');
+const dotenv = require('dotenv');
+const { MAX_RESPONSE_SEGMENTS, MAX_TOKENS, CONTINUE_PROMPT } = require('../utils/constants');
+const { streamText } = require('../utils/stream-text');
+const SwitchableStream = require('../utils/SwitchableStream');
 
 const router = express.Router();
+
+dotenv.config();
 
 if (!process.env.OPENAI_API_KEY) {
   console.error('OPENAI_API_KEY не найден в переменных окружения');
@@ -40,7 +40,7 @@ router.post('/chat', async (req, res) => {
 
     const stream = new SwitchableStream();
 
-    const options: StreamingOptions = {
+    const options = {
       toolChoice: 'none',
       onFinish: async ({ text: content, finishReason }: { text: string; finishReason: string }) => {
         if (finishReason !== 'length') {
@@ -96,4 +96,4 @@ router.post('/chat', async (req, res) => {
   }
 });
 
-export default router;
+module.exports = router;

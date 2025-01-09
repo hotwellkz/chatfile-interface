@@ -1,38 +1,47 @@
-export default class SwitchableStream {
-  private controller: ReadableStreamDefaultController | null = null;
-  private encoder = new TextEncoder();
-  public switches = 0;
+class SwitchableStream {
+  private currentController: ReadableStreamDefaultController | null = null;
+  private _switches = 0;
   public readable: ReadableStream;
 
   constructor() {
     this.readable = new ReadableStream({
       start: (controller) => {
-        this.controller = controller;
-      },
+        this.currentController = controller;
+      }
     });
   }
 
-  async switchSource(stream: ReadableStream) {
-    this.switches++;
-    const reader = stream.getReader();
+  get switches() {
+    return this._switches;
+  }
+
+  async switchSource(newSource: ReadableStream) {
+    this._switches++;
+    const reader = newSource.getReader();
 
     try {
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
         
-        if (this.controller) {
-          this.controller.enqueue(this.encoder.encode(value));
+        if (done) {
+          break;
+        }
+
+        if (this.currentController) {
+          this.currentController.enqueue(value);
         }
       }
-    } finally {
-      reader.releaseLock();
+    } catch (error) {
+      console.error('Error in switchSource:', error);
+      throw error;
     }
   }
 
   close() {
-    if (this.controller) {
-      this.controller.close();
+    if (this.currentController) {
+      this.currentController.close();
     }
   }
 }
+
+module.exports = SwitchableStream;

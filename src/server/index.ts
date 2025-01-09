@@ -1,7 +1,7 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import apiRouter from './api.js';
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const apiRouter = require('./api');
 
 dotenv.config();
 
@@ -14,7 +14,7 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-  origin: function(origin, callback) {
+  origin: function(origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {

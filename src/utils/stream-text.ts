@@ -1,14 +1,17 @@
-import { MAX_TOKENS } from './constants';
+const { MAX_TOKENS } = require('./constants');
 
-export type Messages = Array<{ role: 'user' | 'assistant'; content: string }>;
+interface Messages {
+  role: 'user' | 'assistant';
+  content: string;
+}
 
-export interface StreamingOptions {
+interface StreamingOptions {
   toolChoice: 'none' | 'auto';
   onFinish?: (params: { text: string; finishReason: string }) => Promise<void>;
 }
 
-export async function streamText(
-  messages: Messages,
+async function streamText(
+  messages: Messages[],
   env: any,
   options: StreamingOptions = { toolChoice: 'none' },
   apiKeys: Record<string, string>
@@ -48,3 +51,7 @@ export async function streamText(
     toAIStream: () => stream as ReadableStream,
   };
 }
+
+module.exports = {
+  streamText
+};
