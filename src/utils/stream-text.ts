@@ -1,4 +1,4 @@
-import { MAX_TOKENS } from './constants.js';
+import { MAX_TOKENS } from './constants';
 
 export type Messages = Array<{ role: 'user' | 'assistant'; content: string }>;
 
@@ -26,7 +26,7 @@ export async function streamText(
       Authorization: `Bearer ${openaiKey}`,
     },
     body: JSON.stringify({
-      model: 'gpt-4o',
+      model: 'gpt-4',
       messages,
       max_tokens: MAX_TOKENS,
       stream: true,

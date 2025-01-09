@@ -1,9 +1,9 @@
 import express from 'express';
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
-import { MAX_RESPONSE_SEGMENTS, MAX_TOKENS, CONTINUE_PROMPT } from '../utils/constants.js';
-import { streamText, type Messages, type StreamingOptions } from '../utils/stream-text.js';
-import SwitchableStream from '../utils/SwitchableStream.js';
+import { MAX_RESPONSE_SEGMENTS, MAX_TOKENS, CONTINUE_PROMPT } from '../utils/constants';
+import { streamText, type Messages, type StreamingOptions } from '../utils/stream-text';
+import SwitchableStream from '../utils/SwitchableStream';
 
 dotenv.config();
 
