@@ -1,18 +1,25 @@
-import { MAX_TOKENS } from './constants.js';
+import { MAX_TOKENS } from './constants';
 
-export type Messages = Array<{ role: 'user' | 'assistant'; content: string }>;
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
 
-export interface StreamingOptions {
+interface StreamingOptions {
   toolChoice: 'none' | 'auto';
   onFinish?: (params: { text: string; finishReason: string }) => Promise<void>;
 }
 
+interface ApiKeys {
+  [key: string]: string;
+}
+
 export async function streamText(
-  messages: Messages,
-  env: any,
+  messages: Message[],
+  env: NodeJS.ProcessEnv,
   options: StreamingOptions = { toolChoice: 'none' },
-  apiKeys: Record<string, string>
-) {
+  apiKeys: ApiKeys
+): Promise<{ stream: ReadableStream; toAIStream: () => ReadableStream }> {
   const openaiKey = apiKeys['openai'] || env.OPENAI_API_KEY;
   
   if (!openaiKey) {
@@ -26,7 +33,7 @@ export async function streamText(
       Authorization: `Bearer ${openaiKey}`,
     },
     body: JSON.stringify({
-      model: 'gpt-4o',
+      model: 'gpt-4',
       messages,
       max_tokens: MAX_TOKENS,
       stream: true,
