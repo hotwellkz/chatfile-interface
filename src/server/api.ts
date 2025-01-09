@@ -20,7 +20,8 @@ router.post('/chat', async (req: express.Request, res: express.Response) => {
     const { messages, model, files } = req.body;
 
     if (!messages || !Array.isArray(messages)) {
-      return res.status(400).json({ error: 'Неверный формат сообщений' });
+      res.status(400).json({ error: 'Неверный формат сообщений' });
+      return;
     }
 
     const completion = await openai.chat.completions.create({

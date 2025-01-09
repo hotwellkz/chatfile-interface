@@ -7,11 +7,25 @@ dotenv.config();
 
 const app = express();
 
-// Настройка CORS для разрешения запросов с ваших доменов
+const allowedOrigins = [
+  'https://1wox.com',
+  'https://chatfile-interface.pages.dev',
+  'http://localhost:8080'
+];
+
+// Расширенная настройка CORS
 app.use(cors({
-  origin: ['https://1wox.com', 'https://chatfile-interface.pages.dev', 'http://localhost:8080'],
+  origin: function(origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  maxAge: 86400 // кэширование preflight запросов на 24 часа
 }));
 
 // Парсинг JSON в теле запроса
