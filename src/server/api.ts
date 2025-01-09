@@ -32,14 +32,14 @@ router.post('/chat', async (req: express.Request, res: express.Response) => {
 
     const aiResponse = completion.choices[0].message;
 
-    return res.json({
+    res.json({
       content: aiResponse.content,
       files: files
     });
 
   } catch (error) {
     console.error('Ошибка при обработке запроса чата:', error);
-    return res.status(500).json({ 
+    res.status(500).json({ 
       error: 'Внутренняя ошибка сервера',
       details: error instanceof Error ? error.message : 'Неизвестная ошибка'
     });
